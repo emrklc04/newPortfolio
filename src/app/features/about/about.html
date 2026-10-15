@@ -1,0 +1,29 @@
+<section id="about" class="about-section">
+  <div class="container about-content" appScrollReveal>
+    <app-section-heading
+      eyebrow="Über mich"
+      heading="Informatikstudent mit Interesse an moderner Softwareentwicklung."
+    ></app-section-heading>
+
+    <p>
+      Mein Name ist Emre Kilic und ich studiere Informatik an der FH Technikum Wien. Besonders
+      interessiere ich mich für moderne Webanwendungen sowie für die Verbindung zwischen
+      Frontend, Backend und Datenbanken.
+    </p>
+
+    <p>
+      Während meines Studiums habe ich Projekte mit Angular, Java, Spring Boot, Python,
+      PostgreSQL und Microsoft Azure umgesetzt. Dabei konnte ich Erfahrungen in der Planung,
+      Implementierung und Präsentation von Softwareprojekten sammeln.
+    </p>
+
+    <dl class="info-grid">
+      @for (field of infoFields; track field.label) {
+        <div>
+          <dt>{{ field.label }}</dt>
+          <dd>{{ field.value }}</dd>
+        </div>
+      }
+    </dl>
+  </div>
+</section>

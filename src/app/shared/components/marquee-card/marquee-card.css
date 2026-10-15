@@ -1,0 +1,31 @@
+.marquee-card {
+  flex: none;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  padding: var(--space-8) var(--space-6);
+  border-radius: var(--radius-lg);
+  transition: background-color var(--duration-base) var(--ease-standard);
+}
+
+.marquee-card:hover,
+.marquee-card:focus-visible {
+  background-color: color-mix(in srgb, var(--color-accent) 20%, var(--color-surface-glass));
+}
+
+.marquee-icon {
+  width: 62%;
+  height: 62%;
+  object-fit: contain;
+}
+
+.marquee-label {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: var(--color-text-primary);
+  text-align: center;
+}

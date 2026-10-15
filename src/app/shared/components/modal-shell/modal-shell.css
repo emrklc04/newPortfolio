@@ -1,0 +1,41 @@
+:host {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: block;
+}
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(90vw, 760px);
+  max-height: 85vh;
+  overflow-y: auto;
+  border-radius: var(--radius-lg);
+  padding: var(--space-8);
+  box-shadow: var(--shadow-lg);
+}
+
+.close-button {
+  position: absolute;
+  top: var(--space-4);
+  right: var(--space-4);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full);
+  color: var(--color-text-primary);
+}
+
+.close-button svg {
+  width: 20px;
+  height: 20px;
+}

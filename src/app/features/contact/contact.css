@@ -1,0 +1,26 @@
+.contact-section {
+  padding: var(--space-24) 0 calc(var(--space-24) + var(--space-8));
+}
+
+.contact-box {
+  border-radius: var(--radius-lg);
+  padding: var(--space-16) var(--space-8);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--space-4);
+}
+
+.contact-box h2 {
+  font-size: clamp(1.75rem, 3vw, 2.5rem);
+}
+
+.contact-box .description {
+  color: var(--color-text-secondary);
+  max-width: 480px;
+}
+
+.contact-box .button-primary {
+  margin-top: var(--space-4);
+}

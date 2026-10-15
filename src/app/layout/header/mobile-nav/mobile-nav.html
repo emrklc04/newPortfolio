@@ -1,0 +1,26 @@
+@if (open()) {
+  <div class="backdrop" role="presentation" (click)="onBackdropClick()"></div>
+
+  <nav
+    class="panel glass-surface"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Hauptnavigation"
+  >
+    <button type="button" class="close-button tap-target" aria-label="Menü schließen" (click)="onBackdropClick()">
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+      </svg>
+    </button>
+
+    <ul>
+      @for (link of navLinks(); track link.id) {
+        <li>
+          <button type="button" class="nav-link tap-target" (click)="onLinkClick(link.id)">
+            {{ link.label }}
+          </button>
+        </li>
+      }
+    </ul>
+  </nav>
+}

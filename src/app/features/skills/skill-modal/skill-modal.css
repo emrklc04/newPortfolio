@@ -1,0 +1,76 @@
+.modal-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+
+.modal-skill-circle {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-full);
+  background: var(--color-canvas-alt);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.modal-skill-circle img {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
+
+.modal-header h2 {
+  font-size: 1.5rem;
+}
+
+.modal-subtitle {
+  color: var(--color-text-secondary);
+  font-size: 0.9375rem;
+  margin-top: var(--space-1);
+}
+
+.modal-section {
+  margin-top: var(--space-8);
+}
+
+.modal-section h3 {
+  font-size: 1.0625rem;
+  margin-bottom: var(--space-3);
+}
+
+.modal-section ul {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  color: var(--color-text-secondary);
+  font-size: 0.9375rem;
+}
+
+.modal-section-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.project-count {
+  font-size: 0.8125rem;
+  color: var(--color-text-tertiary);
+  white-space: nowrap;
+}
+
+.modal-projects-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-6);
+}
+
+.no-projects {
+  color: var(--color-text-secondary);
+  font-size: 0.9375rem;
+}

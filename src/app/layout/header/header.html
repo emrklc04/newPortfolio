@@ -1,0 +1,39 @@
+<header class="header glass-surface">
+  <div class="container header-inner">
+    <a routerLink="/" class="logo">Emre Kilic</a>
+
+    <nav class="desktop-nav" aria-label="Hauptnavigation">
+      @for (link of navLinks; track link.id) {
+        <button type="button" (click)="onNavClick(link.id)">{{ link.label }}</button>
+      }
+    </nav>
+
+    <div class="actions">
+      <app-theme-toggle></app-theme-toggle>
+
+      <button
+        type="button"
+        class="hamburger tap-target"
+        aria-label="Menü öffnen"
+        [attr.aria-expanded]="isMobileNavOpen()"
+        (click)="openMobileNav()"
+      >
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path
+            d="M4 7h16M4 12h16M4 17h16"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linecap="round"
+          />
+        </svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<app-mobile-nav
+  [open]="isMobileNavOpen()"
+  [navLinks]="navLinks"
+  (linkClick)="onNavClick($event)"
+  (closeRequested)="closeMobileNav()"
+></app-mobile-nav>

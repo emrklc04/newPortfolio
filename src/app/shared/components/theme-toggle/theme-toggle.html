@@ -1,0 +1,29 @@
+<button
+  type="button"
+  class="theme-toggle tap-target"
+  [attr.aria-pressed]="themeService.theme() === 'dark'"
+  aria-label="Farbschema wechseln"
+  (click)="themeService.toggle()"
+>
+  @if (themeService.theme() === 'dark') {
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M21 12.79A9 9 0 1 1 11.21 3a7 7 0 0 0 9.79 9.79Z"
+        stroke="currentColor"
+        stroke-width="1.8"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      />
+    </svg>
+  } @else {
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="12" cy="12" r="4.5" stroke="currentColor" stroke-width="1.8" />
+      <path
+        d="M12 2.5v2.5M12 19v2.5M4.22 4.22l1.77 1.77M18 18l1.77 1.77M2.5 12H5M19 12h2.5M4.22 19.78 6 18M18 6l1.78-1.78"
+        stroke="currentColor"
+        stroke-width="1.8"
+        stroke-linecap="round"
+      />
+    </svg>
+  }
+</button>

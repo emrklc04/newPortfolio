@@ -1,0 +1,31 @@
+<article class="timeline-item" [class.open]="expanded()">
+  <button
+    type="button"
+    class="timeline-trigger"
+    [attr.aria-expanded]="expanded()"
+    [attr.aria-controls]="entry().id + '-content'"
+    (click)="toggle()"
+  >
+    <span class="timeline-marker" aria-hidden="true"></span>
+
+    <span class="timeline-summary">
+      <span class="timeline-period">{{ entry().period }}</span>
+      <strong>{{ entry().title }}</strong>
+      <span class="timeline-org">
+        {{ entry().organization }}@if (entry().location) {
+          &nbsp;· {{ entry().location }}
+        }
+      </span>
+    </span>
+
+    <span class="timeline-toggle" aria-hidden="true">{{ expanded() ? '−' : '+' }}</span>
+  </button>
+
+  <div class="timeline-details" [id]="entry().id + '-content'" [class.visible]="expanded()">
+    <ul>
+      @for (point of entry().description; track point) {
+        <li><span class="dash" aria-hidden="true">-</span> {{ point }}</li>
+      }
+    </ul>
+  </div>
+</article>

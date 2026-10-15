@@ -1,0 +1,37 @@
+.modal-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+
+.project-logo {
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+}
+
+.modal-header h2 {
+  font-size: 1.375rem;
+}
+
+.description {
+  color: var(--color-text-secondary);
+  line-height: 1.65;
+  margin: var(--space-6) 0;
+}
+
+.tech-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  list-style: none;
+  margin-bottom: var(--space-6);
+}
+
+.links {
+  display: flex;
+  gap: var(--space-4);
+}

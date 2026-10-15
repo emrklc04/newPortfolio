@@ -1,0 +1,52 @@
+<div class="media-stage">
+  @if (videoSrc()) {
+    <video
+      class="media-video"
+      [src]="videoSrc()"
+      controls
+      autoplay
+      muted
+      playsinline
+      (ended)="stopVideo()"
+    ></video>
+    <button type="button" class="back-button tap-target" (click)="stopVideo()">
+      Zurück zu Screenshots
+    </button>
+  } @else {
+    <img class="media-image" [src]="currentImage()" [alt]="title() + ' Screenshot'" loading="lazy" decoding="async" />
+
+    @if (videoUrl() && isActive(0)) {
+      <button
+        type="button"
+        class="play-button tap-target"
+        [attr.aria-label]="'Video zu ' + title() + ' abspielen'"
+        (click)="playVideo()"
+      >
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M8 5v14l11-7z" />
+        </svg>
+      </button>
+    }
+
+    @if (hasMultiple()) {
+      <button type="button" class="nav-button prev tap-target" aria-label="Vorheriger Screenshot" (click)="previous()">
+        ‹
+      </button>
+      <button type="button" class="nav-button next tap-target" aria-label="Nächster Screenshot" (click)="next()">
+        ›
+      </button>
+
+      <div class="dots">
+        @for (screenshot of screenshots(); track screenshot; let i = $index) {
+          <button
+            type="button"
+            class="dot"
+            [class.active]="isActive(i)"
+            [attr.aria-label]="'Screenshot ' + (i + 1) + ' anzeigen'"
+            (click)="goTo(i)"
+          ></button>
+        }
+      </div>
+    }
+  }
+</div>

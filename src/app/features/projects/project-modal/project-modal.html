@@ -1,0 +1,47 @@
+<app-modal-shell [ariaLabel]="project().title" (closeRequested)="closeRequested.emit()">
+  <header class="modal-header">
+    <img class="project-logo" [src]="project().imageUrl" [alt]="project().title + ' Logo'" />
+
+    <div>
+      <p class="eyebrow">Projekt</p>
+      <h2>{{ project().title }}</h2>
+    </div>
+  </header>
+
+  <app-project-media
+    [title]="project().title"
+    [screenshots]="project().screenshots"
+    [videoUrl]="project().videoUrl"
+  ></app-project-media>
+
+  <p class="description">{{ project().fullDescription }}</p>
+
+  <ul class="tech-list">
+    @for (tech of project().technologies; track tech) {
+      <li class="chip">{{ tech }}</li>
+    }
+  </ul>
+
+  <div class="links">
+    @if (project().githubUrl) {
+      <a
+        class="button-secondary"
+        [href]="project().githubUrl"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        GitHub ↗
+      </a>
+    }
+    @if (project().liveUrl) {
+      <a
+        class="button-primary"
+        [href]="project().liveUrl"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        Live ansehen ↗
+      </a>
+    }
+  </div>
+</app-modal-shell>

@@ -1,0 +1,22 @@
+<div class="backdrop" role="presentation" (click)="onBackdropClick()"></div>
+
+<section
+  class="modal glass-surface"
+  role="dialog"
+  aria-modal="true"
+  [attr.aria-label]="ariaLabel()"
+  (click)="stopPropagation($event)"
+>
+  <button
+    type="button"
+    class="close-button tap-target"
+    aria-label="Fenster schließen"
+    (click)="onBackdropClick()"
+  >
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+    </svg>
+  </button>
+
+  <ng-content></ng-content>
+</section>

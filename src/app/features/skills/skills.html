@@ -1,0 +1,33 @@
+<section id="skills" class="skills-section">
+  <div class="container">
+    <app-section-heading
+      eyebrow="Kenntnisse"
+      heading="Technologien und Fähigkeiten"
+      description="Klicke auf eine Technologie, um meine bisherigen Erfahrungen und passende Projekte zu sehen."
+    ></app-section-heading>
+  </div>
+
+  <div class="marquee-row" [class.no-loop]="!isLooping()" appScrollReveal>
+    <div
+      class="marquee-track"
+      [style.--marquee-duration]="'34s'"
+      [style.--marquee-copies]="copies()"
+    >
+      @for (skill of loopedSkills(); track $index; let i = $index) {
+        <app-skill-circle
+          [skill]="skill"
+          [decorative]="i >= realCount"
+          (selected)="openSkill($event)"
+        ></app-skill-circle>
+      }
+    </div>
+  </div>
+</section>
+
+@if (selectedSkill()) {
+  <app-skill-modal
+    [skill]="selectedSkill()!"
+    [relatedProjects]="relatedProjects()"
+    (closeRequested)="closeSkill()"
+  ></app-skill-modal>
+}

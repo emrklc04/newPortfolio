@@ -1,0 +1,72 @@
+.header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--header-height);
+  z-index: 100;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+}
+
+.header-inner {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-6);
+}
+
+.logo {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.0625rem;
+  color: var(--color-text-primary);
+}
+
+.desktop-nav {
+  display: none;
+  align-items: center;
+  gap: var(--space-6);
+}
+
+.desktop-nav button {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  transition: color var(--duration-fast) var(--ease-standard);
+}
+
+.desktop-nav button:hover {
+  color: var(--color-text-primary);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.hamburger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full);
+  color: var(--color-text-primary);
+}
+
+.hamburger svg {
+  width: 22px;
+  height: 22px;
+}
+
+@media (min-width: 860px) {
+  .desktop-nav {
+    display: flex;
+  }
+
+  .hamburger {
+    display: none;
+  }
+}

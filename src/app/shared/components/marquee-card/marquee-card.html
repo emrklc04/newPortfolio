@@ -1,0 +1,13 @@
+<button
+  type="button"
+  class="marquee-card glass-surface"
+  [style.width.px]="widthPx()"
+  [style.aspect-ratio]="aspectRatio()"
+  [tabindex]="decorative() ? -1 : 0"
+  [attr.aria-hidden]="decorative() ? true : null"
+  [attr.aria-label]="decorative() ? null : label() + ' – Details ansehen'"
+  (click)="onClick()"
+>
+  <img class="marquee-icon" [src]="iconUrl()" [alt]="decorative() ? '' : label()" loading="lazy" />
+  <span class="marquee-label">{{ label() }}</span>
+</button>

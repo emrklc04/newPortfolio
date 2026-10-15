@@ -1,0 +1,43 @@
+<section id="journey" class="journey-section">
+  <div class="container">
+    <app-section-heading
+      eyebrow="Mein Werdegang"
+      heading="Berufserfahrung und Bildungsweg"
+      description="Eine Übersicht meiner bisherigen beruflichen Stationen und meiner Ausbildung. Durch Anklicken einer Station werden weitere Details eingeblendet."
+    ></app-section-heading>
+
+    <div class="journey-grid">
+      <div class="journey-column" appScrollReveal>
+        <div class="column-heading">
+          <span class="column-number">01</span>
+          <div>
+            <p class="column-label">Erfahrung</p>
+            <h3>Berufserfahrung</h3>
+          </div>
+        </div>
+
+        <div class="timeline-list">
+          @for (entry of workExperience; track entry.id) {
+            <app-timeline-entry [entry]="entry"></app-timeline-entry>
+          }
+        </div>
+      </div>
+
+      <div class="journey-column" appScrollReveal [appScrollRevealDelay]="120">
+        <div class="column-heading">
+          <span class="column-number">02</span>
+          <div>
+            <p class="column-label">Ausbildung</p>
+            <h3>Bildungsweg</h3>
+          </div>
+        </div>
+
+        <div class="timeline-list">
+          @for (entry of education; track entry.id) {
+            <app-timeline-entry [entry]="entry"></app-timeline-entry>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

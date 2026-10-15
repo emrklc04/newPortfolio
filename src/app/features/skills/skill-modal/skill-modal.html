@@ -1,0 +1,51 @@
+<app-modal-shell [ariaLabel]="skill().name" (closeRequested)="closeRequested.emit()">
+  <header class="modal-header">
+    <div class="modal-skill-circle">
+      <img [src]="skill().iconUrl" [alt]="skill().name" />
+    </div>
+
+    <div>
+      <p class="eyebrow">Technologie</p>
+      <h2>{{ skill().name }}</h2>
+      <p class="modal-subtitle">Meine bisherigen Erfahrungen mit {{ skill().name }}.</p>
+    </div>
+  </header>
+
+  <div class="modal-section">
+    <h3>Was ich damit gemacht habe</h3>
+    <ul>
+      @for (point of skill().description; track point) {
+        <li>{{ point }}</li>
+      }
+    </ul>
+  </div>
+
+  <div class="modal-section">
+    <div class="modal-section-heading">
+      <div>
+        <p class="eyebrow">Passende Arbeiten</p>
+        <h3>Projekte mit {{ skill().name }}</h3>
+      </div>
+      <span class="project-count">
+        {{ relatedProjects().length }} {{ relatedProjects().length === 1 ? 'Projekt' : 'Projekte' }}
+      </span>
+    </div>
+
+    @if (relatedProjects().length > 0) {
+      <div class="modal-projects-grid">
+        @for (project of relatedProjects(); track project.id) {
+          <app-project-card [project]="project" (selected)="openProject($event)"></app-project-card>
+        }
+      </div>
+    } @else {
+      <p class="no-projects">Für diese Technologie ist aktuell noch kein Projekt eingetragen.</p>
+    }
+  </div>
+</app-modal-shell>
+
+@if (selectedProject()) {
+  <app-project-modal
+    [project]="selectedProject()!"
+    (closeRequested)="closeProject()"
+  ></app-project-modal>
+}

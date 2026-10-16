@@ -89,6 +89,34 @@
   font-weight: 500;
 }
 
+/* Imperatively created (non-Angular-template) label chips floating over the cube experience
+   canvas — plain DOM nodes, so this has to live in the global stylesheet rather than a
+   component's view-encapsulated CSS. */
+.label-chip {
+  position: fixed;
+  top: 0;
+  left: 0;
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-full);
+  font-family: var(--font-display);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  transform-origin: 0 0;
+  translate: -50% -100%;
+  will-change: transform, opacity;
+  z-index: 1;
+  /* The label layer itself has pointer-events: none (so clicks pass through to the canvas
+     between labels); each chip opts back in so it's clickable like the 3D object it names. */
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.label-chip:hover {
+  box-shadow: var(--shadow-md);
+}
+
 .button-primary,
 .button-secondary {
   display: inline-flex;

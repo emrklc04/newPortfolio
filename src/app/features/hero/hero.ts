@@ -1,5 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { AnchorScrollService } from '../../core/services/anchor-scroll.service';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 
 @Component({
   selector: 'app-hero',
@@ -8,9 +7,7 @@ import { AnchorScrollService } from '../../core/services/anchor-scroll.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Hero {
-  private readonly anchorScroll = inject(AnchorScrollService);
-
-  protected scrollTo(id: string): void {
-    this.anchorScroll.scrollToSection(id);
+  protected scrollPastHero(): void {
+    window.scrollBy({ top: window.innerHeight, behavior: 'smooth' });
   }
 }

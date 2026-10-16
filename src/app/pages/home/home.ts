@@ -1,15 +1,15 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { SceneModeService } from '../../core/services/scene-mode.service';
 import { Hero } from '../../features/hero/hero';
-import { ProjectGrid } from '../../features/projects/project-grid/project-grid';
-import { About } from '../../features/about/about';
-import { Journey } from '../../features/journey/journey';
-import { Skills } from '../../features/skills/skills';
-import { Contact } from '../../features/contact/contact';
+import { CubeExperience } from '../../features/cube/cube-experience';
+import { CubeFallback } from '../../features/cube-fallback/cube-fallback';
 
 @Component({
   selector: 'app-home',
-  imports: [Hero, ProjectGrid, About, Journey, Skills, Contact],
+  imports: [Hero, CubeExperience, CubeFallback],
   templateUrl: './home.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class Home {}
+export class Home {
+  protected readonly sceneMode = inject(SceneModeService);
+}

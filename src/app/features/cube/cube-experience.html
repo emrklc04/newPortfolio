@@ -1,0 +1,113 @@
+<canvas
+  #canvasRef
+  class="cube-canvas"
+  role="img"
+  aria-label="Interaktiver, drehender 3D-Würfel mit sechs Low-Poly-Szenen: Projekte, Berufserfahrung, Über mich, Technologien, Kontakt."
+  (click)="onCanvasClick($event)"
+></canvas>
+
+<div #labelLayerRef class="label-layer" aria-hidden="true"></div>
+
+@if (selectedProject(); as project) {
+  <app-project-modal [project]="project" (closeRequested)="closeProject()"></app-project-modal>
+}
+
+@if (selectedSkill(); as skill) {
+  <app-skill-modal
+    [skill]="skill"
+    [relatedProjects]="relatedProjects()"
+    (closeRequested)="closeSkill()"
+  ></app-skill-modal>
+}
+
+@if (selectedExperience(); as entry) {
+  <app-modal-shell [ariaLabel]="entry.title" (closeRequested)="closeExperience()">
+    <header class="modal-header">
+      <div>
+        <p class="eyebrow">{{ entry.period }}</p>
+        <h2>{{ entry.title }}</h2>
+        <p class="modal-subtitle">
+          {{ entry.organization }}@if (entry.location) {
+            &nbsp;· {{ entry.location }}
+          }
+        </p>
+      </div>
+    </header>
+
+    <div class="modal-section">
+      <ul>
+        @for (point of entry.description; track point) {
+          <li>{{ point }}</li>
+        }
+      </ul>
+    </div>
+  </app-modal-shell>
+}
+
+@if (aboutOpen()) {
+  <app-modal-shell ariaLabel="Über mich" (closeRequested)="closeAbout()">
+    <header class="modal-header">
+      <div>
+        <p class="eyebrow">Über mich</p>
+        <h2>Informatikstudent mit Interesse an moderner Softwareentwicklung.</h2>
+      </div>
+    </header>
+
+    <div class="modal-section">
+      <p>
+        Mein Name ist Emre Kilic und ich studiere Informatik an der FH Technikum Wien. Besonders
+        interessiere ich mich für moderne Webanwendungen sowie für die Verbindung zwischen
+        Frontend, Backend und Datenbanken.
+      </p>
+      <p>
+        Während meines Studiums habe ich Projekte mit Angular, Java, Spring Boot, Python,
+        PostgreSQL und Microsoft Azure umgesetzt. Dabei konnte ich Erfahrungen in der Planung,
+        Implementierung und Präsentation von Softwareprojekten sammeln.
+      </p>
+
+      <dl class="info-grid">
+        @for (field of infoFields; track field.label) {
+          <div>
+            <dt>{{ field.label }}</dt>
+            <dd>{{ field.value }}</dd>
+          </div>
+        }
+      </dl>
+    </div>
+
+    <div class="modal-section">
+      <h3>Bildungsweg</h3>
+      <ul class="education-list">
+        @for (entry of education; track entry.id) {
+          <li>
+            <strong>{{ entry.title }}</strong> — {{ entry.organization }}
+            <span class="education-period">({{ entry.period }})</span>
+          </li>
+        }
+      </ul>
+    </div>
+  </app-modal-shell>
+}
+
+@if (contactOpen()) {
+  <app-modal-shell ariaLabel="Kontakt" (closeRequested)="closeContact()">
+    <header class="modal-header">
+      <div>
+        <p class="eyebrow">Kontakt</p>
+        <h2>Lust auf eine Zusammenarbeit?</h2>
+        <p class="modal-subtitle">
+          Setzen wir uns in Kontakt – ich freue mich über deine Nachricht.
+        </p>
+      </div>
+    </header>
+
+    <div class="modal-section contact-actions">
+      <a class="button-primary" href="mailto:kilicemre004@gmail.com">E-Mail schreiben</a>
+      <nav class="contact-links" aria-label="Weitere Kontaktmöglichkeiten">
+        @for (link of contactLinks; track link.label) {
+          <a [href]="link.href" target="_blank" rel="noopener noreferrer">{{ link.label }}</a>
+        }
+      </nav>
+    </div>
+  </app-modal-shell>
+}

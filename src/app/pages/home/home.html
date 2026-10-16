@@ -1,6 +1,7 @@
 <app-hero></app-hero>
-<app-project-grid></app-project-grid>
-<app-about></app-about>
-<app-journey></app-journey>
-<app-skills></app-skills>
-<app-contact></app-contact>
+
+@if (sceneMode.use3d()) {
+  <app-cube-experience></app-cube-experience>
+} @else {
+  <app-cube-fallback></app-cube-fallback>
+}

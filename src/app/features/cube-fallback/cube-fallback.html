@@ -1,0 +1,114 @@
+<section id="projects" class="fallback-section">
+  <div class="container">
+    <app-section-heading
+      eyebrow="Portfolio"
+      heading="Meine Projekte"
+      description="Eine Auswahl meiner bisherigen IT-Projekte aus meinem Studium und meiner persönlichen Entwicklung."
+    ></app-section-heading>
+
+    <div class="projects-grid" appScrollReveal>
+      @for (project of projects; track project.id) {
+        <app-project-card [project]="project" (selected)="openProject($event)"></app-project-card>
+      }
+    </div>
+  </div>
+</section>
+
+<section id="journey" class="fallback-section alt">
+  <div class="container">
+    <app-section-heading
+      eyebrow="Mein Werdegang"
+      heading="Berufserfahrung und Bildungsweg"
+      description="Durch Anklicken einer Station werden weitere Details eingeblendet."
+    ></app-section-heading>
+
+    <div class="journey-grid" appScrollReveal>
+      <div class="journey-column">
+        <h3>Berufserfahrung</h3>
+        <div class="timeline-list">
+          @for (entry of workExperience; track entry.id) {
+            <app-timeline-entry [entry]="entry"></app-timeline-entry>
+          }
+        </div>
+      </div>
+
+      <div class="journey-column">
+        <h3>Bildungsweg</h3>
+        <div class="timeline-list">
+          @for (entry of education; track entry.id) {
+            <app-timeline-entry [entry]="entry"></app-timeline-entry>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="about" class="fallback-section">
+  <div class="container about-content" appScrollReveal>
+    <app-section-heading
+      eyebrow="Über mich"
+      heading="Informatikstudent mit Interesse an moderner Softwareentwicklung."
+    ></app-section-heading>
+
+    <p>
+      Mein Name ist Emre Kilic und ich studiere Informatik an der FH Technikum Wien. Besonders
+      interessiere ich mich für moderne Webanwendungen sowie für die Verbindung zwischen
+      Frontend, Backend und Datenbanken.
+    </p>
+
+    <p>
+      Während meines Studiums habe ich Projekte mit Angular, Java, Spring Boot, Python,
+      PostgreSQL und Microsoft Azure umgesetzt. Dabei konnte ich Erfahrungen in der Planung,
+      Implementierung und Präsentation von Softwareprojekten sammeln.
+    </p>
+
+    <dl class="info-grid">
+      @for (field of infoFields; track field.label) {
+        <div>
+          <dt>{{ field.label }}</dt>
+          <dd>{{ field.value }}</dd>
+        </div>
+      }
+    </dl>
+  </div>
+</section>
+
+<section id="skills" class="fallback-section alt">
+  <div class="container">
+    <app-section-heading
+      eyebrow="Kenntnisse"
+      heading="Technologien und Fähigkeiten"
+      description="Klicke auf eine Technologie, um meine bisherigen Erfahrungen und passende Projekte zu sehen."
+    ></app-section-heading>
+
+    <div class="skills-grid" appScrollReveal>
+      @for (skill of skills; track skill.id) {
+        <app-skill-circle [skill]="skill" (selected)="openSkill($event)"></app-skill-circle>
+      }
+    </div>
+  </div>
+</section>
+
+<section id="contact" class="fallback-section">
+  <div class="container">
+    <div class="contact-box glass-surface" appScrollReveal>
+      <p class="eyebrow">Kontakt</p>
+      <h2>Lust auf eine Zusammenarbeit?</h2>
+      <p class="description">Setzen wir uns in Kontakt – ich freue mich über deine Nachricht.</p>
+      <a class="button-primary" href="mailto:kilicemre004@gmail.com">E-Mail schreiben</a>
+    </div>
+  </div>
+</section>
+
+@if (selectedProject(); as project) {
+  <app-project-modal [project]="project" (closeRequested)="closeProject()"></app-project-modal>
+}
+
+@if (selectedSkill(); as skill) {
+  <app-skill-modal
+    [skill]="skill"
+    [relatedProjects]="relatedProjects()"
+    (closeRequested)="closeSkill()"
+  ></app-skill-modal>
+}

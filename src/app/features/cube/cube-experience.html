@@ -2,11 +2,32 @@
   #canvasRef
   class="cube-canvas"
   role="img"
-  aria-label="Interaktiver, drehender 3D-Würfel mit sechs Low-Poly-Szenen: Projekte, Berufserfahrung, Über mich, Technologien, Kontakt."
-  (click)="onCanvasClick($event)"
+  aria-label="Frei erkundbare 3D-Welt aus vier Inseln: Projekte als Dorf, Skills als Stadt, Über mich als Burg im Wald, Kontakt als Insel im Meer. Ein Klick auf ein Gebäude öffnet die Details. Ziehen zum Verschieben/Drehen, Mausrad zum Zoomen."
 ></canvas>
 
 <div #labelLayerRef class="label-layer" aria-hidden="true"></div>
+
+<!-- `pointerdown` is stopped here so it never reaches OrbitControls, which listens on this
+     component's host. It captures the pointer on pointerdown, which would retarget this button's
+     click to the host and swallow it — the same way it swallowed the modal close button. -->
+<button
+  type="button"
+  class="reset-view glass-surface tap-target"
+  aria-label="Zurück zur Gesamtansicht"
+  (pointerdown)="$event.stopPropagation()"
+  (click)="resetView()"
+>
+  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <path
+      d="M4 9h5V4M4.6 14a7.5 7.5 0 1 0 1.3-6"
+      stroke="currentColor"
+      stroke-width="1.8"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+  </svg>
+  <span>Gesamtansicht</span>
+</button>
 
 @if (selectedProject(); as project) {
   <app-project-modal [project]="project" (closeRequested)="closeProject()"></app-project-modal>
@@ -27,7 +48,8 @@
         <p class="eyebrow">{{ entry.period }}</p>
         <h2>{{ entry.title }}</h2>
         <p class="modal-subtitle">
-          {{ entry.organization }}@if (entry.location) {
+          {{ entry.organization }}
+          @if (entry.location) {
             &nbsp;· {{ entry.location }}
           }
         </p>
@@ -44,6 +66,39 @@
   </app-modal-shell>
 }
 
+@if (journeyOpen()) {
+  <app-modal-shell ariaLabel="Werdegang" (closeRequested)="closeJourney()">
+    <header class="modal-header">
+      <div>
+        <p class="eyebrow">Werdegang</p>
+        <h2>Beruflicher und schulischer Weg.</h2>
+      </div>
+    </header>
+
+    <div class="modal-section">
+      <ol class="timeline-list">
+        @for (entry of workExperience; track entry.id) {
+          <li>
+            <p class="eyebrow">{{ entry.period }}</p>
+            <h3>{{ entry.title }}</h3>
+            <p class="modal-subtitle">
+              {{ entry.organization }}
+              @if (entry.location) {
+                &nbsp;· {{ entry.location }}
+              }
+            </p>
+            <ul>
+              @for (point of entry.description; track point) {
+                <li>{{ point }}</li>
+              }
+            </ul>
+          </li>
+        }
+      </ol>
+    </div>
+  </app-modal-shell>
+}
+
 @if (aboutOpen()) {
   <app-modal-shell ariaLabel="Über mich" (closeRequested)="closeAbout()">
     <header class="modal-header">
@@ -56,13 +111,13 @@
     <div class="modal-section">
       <p>
         Mein Name ist Emre Kilic und ich studiere Informatik an der FH Technikum Wien. Besonders
-        interessiere ich mich für moderne Webanwendungen sowie für die Verbindung zwischen
-        Frontend, Backend und Datenbanken.
+        interessiere ich mich für moderne Webanwendungen sowie für die Verbindung zwischen Frontend,
+        Backend und Datenbanken.
       </p>
       <p>
-        Während meines Studiums habe ich Projekte mit Angular, Java, Spring Boot, Python,
-        PostgreSQL und Microsoft Azure umgesetzt. Dabei konnte ich Erfahrungen in der Planung,
-        Implementierung und Präsentation von Softwareprojekten sammeln.
+        Während meines Studiums habe ich Projekte mit Angular, Java, Spring Boot, Python, PostgreSQL
+        und Microsoft Azure umgesetzt. Dabei konnte ich Erfahrungen in der Planung, Implementierung
+        und Präsentation von Softwareprojekten sammeln.
       </p>
 
       <dl class="info-grid">

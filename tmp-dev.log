@@ -1,0 +1,300 @@
+﻿Environment variable "PORT" detected. Using port 65155.
+node.exe : Prebundling has been configured but will not be used because caching has been disabled.
+In Zeile:1 Zeichen:1
++ & "C:\nvm4w\nodejs/node.exe" "C:\nvm4w\nodejs/node_modules/npm/bin/np ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Prebundling has... been disabled.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+❯ Building...
+✔ Building...
+Initial chunk files | Names         |  Raw size
+chunk-4U4SQDDY.js   | -             |   1.11 MB | 
+chunk-MWDCQ2VM.js   | -             | 430.15 kB | 
+main.js             | main          |  36.53 kB | 
+styles.css          | styles        |   8.63 kB | 
+chunk-7FFZJ5MC.js   | -             |   3.34 kB | 
+
+                    | Initial total |   1.59 MB
+
+Lazy chunk files    | Names         |  Raw size
+chunk-KE3CNTT7.js   | home          |   1.69 MB | 
+chunk-M6IWSTKO.js   | datenschutz   |  13.73 kB | 
+chunk-C6S44IZZ.js   | impressum     |   8.70 kB | 
+
+Application bundle generation complete. [12.343 seconds] - 2026-10-24T14:50:15.402Z
+
+Watch mode enabled. Watching for file changes...
+NOTE: Raw file sizes do not reflect development server per-request transformations.
+  ➜  Local:   http://localhost:65155/
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names | Raw size
+main.js             | main  | 36.53 kB | 
+
+Lazy chunk files    | Names | Raw size
+chunk-QPOJ2WVS.js   | home  |  1.69 MB | 
+
+Application bundle generation complete. [1.152 seconds] - 2026-10-24T14:52:35.376Z
+
+Page reload sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names | Raw size
+main.js             | main  | 36.53 kB | 
+
+Lazy chunk files    | Names | Raw size
+chunk-UZZFDIHJ.js   | home  |  1.69 MB | 
+
+Application bundle generation complete. [0.841 seconds] - 2026-10-24T14:52:55.190Z
+
+Page reload sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names | Raw size
+main.js             | main  | 36.53 kB | 
+
+Lazy chunk files    | Names | Raw size
+chunk-XW3UHW6H.js   | home  |  1.69 MB | 
+
+Application bundle generation complete. [0.760 seconds] - 2026-10-24T14:53:18.983Z
+
+Page reload sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names         |  Raw size
+chunk-4U4SQDDY.js   | -             |   1.11 MB | 
+chunk-MWDCQ2VM.js   | -             | 430.15 kB | 
+main.js             | main          |  36.53 kB | 
+styles.css          | styles        |   8.63 kB | 
+chunk-7FFZJ5MC.js   | -             |   3.34 kB | 
+
+                    | Initial total |   1.59 MB
+
+Lazy chunk files    | Names         |  Raw size
+chunk-XW3UHW6H.js   | home          |   1.69 MB | 
+chunk-M6IWSTKO.js   | datenschutz   |  13.73 kB | 
+chunk-C6S44IZZ.js   | impressum     |   8.70 kB | 
+
+Application bundle generation complete. [0.309 seconds] - 2026-10-24T14:53:43.120Z
+
+Page reload sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names         |  Raw size
+chunk-4U4SQDDY.js   | -             |   1.11 MB | 
+chunk-MWDCQ2VM.js   | -             | 430.15 kB | 
+main.js             | main          |  36.53 kB | 
+styles.css          | styles        |   8.63 kB | 
+chunk-7FFZJ5MC.js   | -             |   3.34 kB | 
+
+                    | Initial total |   1.59 MB
+
+Lazy chunk files    | Names         |  Raw size
+chunk-XW3UHW6H.js   | home          |   1.69 MB | 
+chunk-M6IWSTKO.js   | datenschutz   |  13.73 kB | 
+chunk-C6S44IZZ.js   | impressum     |   8.70 kB | 
+
+Application bundle generation complete. [0.193 seconds] - 2026-10-24T14:53:47.298Z
+
+Page reload sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names         |  Raw size
+chunk-4U4SQDDY.js   | -             |   1.11 MB | 
+chunk-MWDCQ2VM.js   | -             | 430.15 kB | 
+main.js             | main          |  36.53 kB | 
+styles.css          | styles        |   8.63 kB | 
+chunk-7FFZJ5MC.js   | -             |   3.34 kB | 
+
+                    | Initial total |   1.59 MB
+
+Lazy chunk files    | Names         |  Raw size
+chunk-XW3UHW6H.js   | home          |   1.69 MB | 
+chunk-M6IWSTKO.js   | datenschutz   |  13.73 kB | 
+chunk-C6S44IZZ.js   | impressum     |   8.70 kB | 
+
+Application bundle generation complete. [0.193 seconds] - 2026-10-24T14:53:47.593Z
+
+Page reload sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Application bundle generation failed. [0.750 seconds] - 2026-10-24T14:58:18.556Z
+
+X [ERROR] TS2552: Cannot find name 'createPlazaDisc'. Did you mean 'createPavedDisc'? [plugin angular-compiler]
+
+    C:/Users/kilic/Desktop/Emre/emre_career/new_portfolio/newPortfolio/src/app/features/cube/engine/skills-island.ts:25
+0:12:
+      250 │   group.add(createPlazaDisc(kit));
+          ╵             ~~~~~~~~~~~~~~~
+
+  'createPavedDisc' is declared here.
+
+    
+C:/Users/kilic/Desktop/Emre/emre_career/new_portfolio/newPortfolio/src/app/features/cube/engine/skills-island.ts:166:9:
+      166 │ function createPavedDisc(kit: Kit, radius: number, y: number): Me...
+          ╵          ~~~~~~~~~~~~~~~
+
+
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Application bundle generation failed. [0.563 seconds] - 2026-10-24T14:58:44.741Z
+
+X [ERROR] TS2304: Cannot find name 'RING_ROAD_OUTER'. [plugin angular-compiler]
+
+    C:/Users/kilic/Desktop/Emre/emre_career/new_portfolio/newPortfolio/src/app/features/cube/engine/skills-island.ts:22
+6:16:
+      226 │   const scale = RING_ROAD_OUTER / CURVE_NATIVE_OUTER;
+          ╵                 ~~~~~~~~~~~~~~~
+
+
+X [ERROR] TS2304: Cannot find name 'CURVE_NATIVE_OUTER'. [plugin angular-compiler]
+
+    C:/Users/kilic/Desktop/Emre/emre_career/new_portfolio/newPortfolio/src/app/features/cube/engine/skills-island.ts:22
+6:34:
+      226 │   const scale = RING_ROAD_OUTER / CURVE_NATIVE_OUTER;
+          ╵                                   ~~~~~~~~~~~~~~~~~~
+
+
+X [ERROR] TS2304: Cannot find name 'RING_ROAD_INNER'. [plugin angular-compiler]
+
+    C:/Users/kilic/Desktop/Emre/emre_career/new_portfolio/newPortfolio/src/app/features/cube/engine/skills-island.ts:23
+8:32:
+      238 │ ...add(createPavedDisc(kit, RING_ROAD_INNER, GROUND_CLEARANCE * 3));
+          ╵                             ~~~~~~~~~~~~~~~
+
+
+X [ERROR] TS2552: Cannot find name 'createPlazaDisc'. Did you mean 'createPavedDisc'? [plugin angular-compiler]
+
+    C:/Users/kilic/Desktop/Emre/emre_career/new_portfolio/newPortfolio/src/app/features/cube/engine/skills-island.ts:25
+5:12:
+      255 │   group.add(createPlazaDisc(kit));
+          ╵             ~~~~~~~~~~~~~~~
+
+  'createPavedDisc' is declared here.
+
+    
+C:/Users/kilic/Desktop/Emre/emre_career/new_portfolio/newPortfolio/src/app/features/cube/engine/skills-island.ts:166:9:
+      166 │ function createPavedDisc(kit: Kit, radius: number, y: number): Me...
+          ╵          ~~~~~~~~~~~~~~~
+
+
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Application bundle generation failed. [1.633 seconds] - 2026-10-24T14:59:07.260Z
+
+X [ERROR] TS2552: Cannot find name 'createPlazaDisc'. Did you mean 'createPavedDisc'? [plugin angular-compiler]
+
+    C:/Users/kilic/Desktop/Emre/emre_career/new_portfolio/newPortfolio/src/app/features/cube/engine/skills-island.ts:25
+6:12:
+      256 │   group.add(createPlazaDisc(kit));
+          ╵             ~~~~~~~~~~~~~~~
+
+  'createPavedDisc' is declared here.
+
+    
+C:/Users/kilic/Desktop/Emre/emre_career/new_portfolio/newPortfolio/src/app/features/cube/engine/skills-island.ts:167:9:
+      167 │ function createPavedDisc(kit: Kit, radius: number, y: number): Me...
+          ╵          ~~~~~~~~~~~~~~~
+
+
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names         |  Raw size
+chunk-4U4SQDDY.js   | -             |   1.11 MB | 
+chunk-MWDCQ2VM.js   | -             | 430.15 kB | 
+main.js             | main          |  36.53 kB | 
+styles.css          | styles        |   8.63 kB | 
+chunk-7FFZJ5MC.js   | -             |   3.34 kB | 
+
+                    | Initial total |   1.59 MB
+
+Lazy chunk files    | Names         |  Raw size
+chunk-2X6EE6WS.js   | home          |   1.69 MB | 
+chunk-M6IWSTKO.js   | datenschutz   |  13.73 kB | 
+chunk-C6S44IZZ.js   | impressum     |   8.70 kB | 
+
+Application bundle generation complete. [10.036 seconds] - 2026-10-24T15:00:09.541Z
+
+Page reload sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Application bundle generation failed. [0.566 seconds] - 2026-10-24T15:08:24.794Z
+
+X [ERROR] TS2304: Cannot find name 'GROUND_CLEARANCE'. [plugin angular-compiler]
+
+    C:/Users/kilic/Desktop/Emre/emre_career/new_portfolio/newPortfolio/src/app/features/cube/engine/skills-island.ts:24
+1:52:
+      241 │ ...e.position.y = CURVE_SURFACE_DROP * scale + GROUND_CLEARANCE * 2;
+          ╵                                                ~~~~~~~~~~~~~~~~
+
+
+X [ERROR] TS2304: Cannot find name 'GROUND_CLEARANCE'. [plugin angular-compiler]
+
+    C:/Users/kilic/Desktop/Emre/emre_career/new_portfolio/newPortfolio/src/app/features/cube/engine/skills-island.ts:24
+5:49:
+      245 │ ...add(createPavedDisc(kit, RING_ROAD_INNER, GROUND_CLEARANCE * 3));
+          ╵                                              ~~~~~~~~~~~~~~~~
+
+
+X [ERROR] TS2304: Cannot find name 'GROUND_CLEARANCE'. [plugin angular-compiler]
+
+    C:/Users/kilic/Desktop/Emre/emre_career/new_portfolio/newPortfolio/src/app/features/cube/engine/skills-island.ts:26
+2:47:
+      262 │   group.add(createPavedDisc(kit, PLAZA_RADIUS, GROUND_CLEARANCE));
+          ╵                                                ~~~~~~~~~~~~~~~~
+
+
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Application bundle generation failed. [0.579 seconds] - 2026-10-24T15:08:49.798Z
+
+X [ERROR] TS2304: Cannot find name 'GROUND_CLEARANCE'. [plugin angular-compiler]
+
+    C:/Users/kilic/Desktop/Emre/emre_career/new_portfolio/newPortfolio/src/app/features/cube/engine/skills-island.ts:26
+2:47:
+      262 │   group.add(createPavedDisc(kit, PLAZA_RADIUS, GROUND_CLEARANCE));
+          ╵                                                ~~~~~~~~~~~~~~~~
+
+
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names         |  Raw size
+chunk-4U4SQDDY.js   | -             |   1.11 MB | 
+chunk-MWDCQ2VM.js   | -             | 430.15 kB | 
+main.js             | main          |  36.53 kB | 
+styles.css          | styles        |   8.63 kB | 
+chunk-7FFZJ5MC.js   | -             |   3.34 kB | 
+
+                    | Initial total |   1.59 MB
+
+Lazy chunk files    | Names         |  Raw size
+chunk-EYW77VOP.js   | home          |   1.69 MB | 
+chunk-M6IWSTKO.js   | datenschutz   |  13.73 kB | 
+chunk-C6S44IZZ.js   | impressum     |   8.70 kB | 
+
+Application bundle generation complete. [0.789 seconds] - 2026-10-24T15:09:25.410Z
+
+Page reload sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names | Raw size
+main.js             | main  | 36.53 kB | 
+
+Lazy chunk files    | Names | Raw size
+chunk-B55LVG6J.js   | home  |  1.69 MB | 
+
+Application bundle generation complete. [0.688 seconds] - 2026-10-24T15:11:10.735Z
+
+Page reload sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names | Raw size
+main.js             | main  | 36.53 kB | 
+
+Lazy chunk files    | Names | Raw size
+chunk-EYW77VOP.js   | home  |  1.69 MB | 
+
+Application bundle generation complete. [0.702 seconds] - 2026-10-24T15:12:47.820Z
+
+Page reload sent to client(s).

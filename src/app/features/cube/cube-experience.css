@@ -1,28 +1,108 @@
-/* 600vh drives the 5 rotation segments; the extra 100vh is scroll "runway" so the final segment
-   is actually reachable — with position:fixed (not sticky) there's nothing else to stop the
-   browser from clamping scrollY short of it once the document runs out of content below. */
+/* The world no longer rotates via scroll-jacking — a free OrbitControls camera explores it
+   instead, so this is just a normal fixed-size section (no scroll "runway"). `touch-action: none`
+   is set here too (not just on the canvas) since OrbitControls listens on this host element —
+   otherwise a touch-drag that starts on a floating label chip would scroll the page instead of
+   orbiting the camera. */
 :host {
   display: block;
   position: relative;
-  height: 700vh;
+  height: 100dvh;
+  touch-action: none;
+}
+
+/* `touch-action` intersects down the ancestor chain, so the lock above would also stop a panel
+   rendered inside this host from being scrolled by touch. While a panel is open the camera is
+   suspended anyway (see CubeScene.setPanelOpen), so the lock can be lifted. */
+:host(.panel-open) {
+  touch-action: auto;
 }
 
 .cube-canvas {
-  position: fixed;
+  position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   z-index: 0;
-  cursor: pointer;
-  touch-action: pan-y;
+  cursor: grab;
+  touch-action: none;
 }
 
 .label-layer {
-  position: fixed;
+  position: absolute;
   inset: 0;
   z-index: 1;
   pointer-events: none;
   overflow: hidden;
+}
+
+/* Returns the camera to the opening viewpoint. Bottom-right, clear of the header nav and of the
+   floating label chips, which cluster around the islands in the middle of the view. */
+.reset-view {
+  position: absolute;
+  right: var(--space-6);
+  bottom: var(--space-6);
+  z-index: 2;
+
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-full);
+
+  font-family: var(--font-display);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  cursor: pointer;
+
+  /* Liquid glass: the blurred surface comes from .glass-surface, and these add the specular top
+     edge and soft lift that make it read as a floating pane rather than a flat chip. */
+  box-shadow:
+    var(--shadow-md),
+    inset 0 1px 0 rgba(255, 255, 255, 0.45);
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.reset-view svg {
+  width: 17px;
+  height: 17px;
+  flex-shrink: 0;
+}
+
+.reset-view:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    var(--shadow-lg),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.reset-view:active {
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reset-view {
+    transition: none;
+  }
+
+  .reset-view:hover {
+    transform: none;
+  }
+}
+
+/* On narrow screens the label reads as clutter next to the islands; the icon carries it, with the
+   accessible name still on the button. */
+@media (max-width: 540px) {
+  .reset-view span {
+    display: none;
+  }
+
+  .reset-view {
+    padding: var(--space-3);
+  }
 }
 
 /* Reused modal content styling (mirrors skill-modal.css / about.css, which are view-encapsulated
@@ -90,6 +170,23 @@
 
 .education-period {
   color: var(--color-text-tertiary);
+}
+
+/* Werdegang overview: every timeline entry stacked, each with its own bullet list. */
+.timeline-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+.timeline-list > li > h3 {
+  font-size: 1.0625rem;
+  margin-top: var(--space-1);
+}
+
+.timeline-list ul {
+  margin-top: var(--space-3);
 }
 
 .contact-actions {

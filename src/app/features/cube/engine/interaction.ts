@@ -1,12 +1,50 @@
-import { Camera, Object3D, Raycaster, Vector2 } from 'three';
+import { Camera, Object3D, Raycaster, Sphere, Vector2, Vector3 } from 'three';
 import { InteractiveObject } from './types';
 
-/** Raycasts pointer events against the registered interactive objects of the active cube faces. */
+/** A whole object approximated by a bounding sphere, for coarse picking. */
+export interface SphereCandidate<T> {
+  value: T;
+  center: Vector3;
+  radius: number;
+}
+
+const sphereScratch = new Sphere();
+const hitPointScratch = new Vector3();
+
+/** Raycasts pointer events against the registered interactive objects of the active islands. */
 export class CubeInteraction {
   private readonly raycaster = new Raycaster();
   private readonly pointer = new Vector2();
 
   constructor(private readonly camera: Camera) {}
+
+  /**
+   * Picks the nearest candidate whose bounding sphere the pointer ray passes through.
+   *
+   * Used to hit a whole island without walking its geometry: an island is a few hundred meshes, and
+   * for "did I click that island over there" a sphere is both accurate enough and far cheaper.
+   */
+  pickSphere<T>(ndcX: number, ndcY: number, candidates: readonly SphereCandidate<T>[]): T | null {
+    this.pointer.set(ndcX, ndcY);
+    this.raycaster.setFromCamera(this.pointer, this.camera);
+
+    let nearest: T | null = null;
+    let nearestDistance = Infinity;
+
+    for (const candidate of candidates) {
+      sphereScratch.set(candidate.center, candidate.radius);
+      if (!this.raycaster.ray.intersectSphere(sphereScratch, hitPointScratch)) {
+        continue;
+      }
+      const distance = this.raycaster.ray.origin.distanceTo(hitPointScratch);
+      if (distance < nearestDistance) {
+        nearestDistance = distance;
+        nearest = candidate.value;
+      }
+    }
+
+    return nearest;
+  }
 
   pick(ndcX: number, ndcY: number, candidates: InteractiveObject[]): InteractiveObject | null {
     this.pointer.set(ndcX, ndcY);

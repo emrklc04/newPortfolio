@@ -15,9 +15,10 @@ import { SkillModal } from '../skills/skill-modal/skill-modal';
 import { TimelineEntry } from '../journey/timeline-entry/timeline-entry';
 
 /**
- * Accessible, non-animated equivalent of the 3D cube experience: shown when the user prefers
- * reduced motion or their browser has no WebGL. Uses the same section ids as the cube's face
- * registry (projects/journey/about/skills/contact) so the header nav works unchanged either way.
+ * Accessible, non-animated equivalent of the 3D island experience: shown when the user prefers
+ * reduced motion or their browser has no WebGL. Renders every section as a real DOM element whose
+ * id matches the header nav (projects/journey/about/skills/contact), so AnchorScrollService finds
+ * and scrolls to it directly instead of handing off to SectionNavigationService.
  */
 @Component({
   selector: 'app-cube-fallback',

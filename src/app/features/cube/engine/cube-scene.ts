@@ -2,46 +2,42 @@ import {
   AmbientLight,
   DirectionalLight,
   Group,
+  MathUtils,
   Material,
-  Matrix4,
   Mesh,
   PerspectiveCamera,
-  Quaternion,
   Scene,
   Vector3,
   WebGLRenderer,
 } from 'three';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { Project } from '../../../core/models/project.model';
 import { Skill } from '../../../core/models/skill.model';
-import { TimelineEntry } from '../../../core/models/timeline-entry.model';
-import {
-  activeThemeIndex,
-  CUBE_KEYFRAMES,
-  FACE_NORMAL_LOOKUP,
-  FACE_THEME,
-  THEME_ORDER,
-  rotationForProgress,
-  themeRevealWeight,
-} from './cube-rotation';
+import { buildAboutIsland } from './about-island';
+import { buildContactIsland } from './contact-island';
 import { CubeInteraction } from './interaction';
+import { IslandBuildResult } from './island-decor';
+import { createIslandBase } from './island-base';
+import {
+  ISLANDS,
+  IslandDefinition,
+  IslandId,
+  findIsland,
+  framingRadius,
+  worldBounds,
+} from './islands';
+import { Kits } from './kits';
 import { projectToScreen } from './label-projector';
-import { ModelKey } from './model-urls';
-import { PALETTE, SPACE_BACKGROUND } from './palette';
-import { createSlab, SLAB_SIZE } from './primitives';
+import { SPACE_BACKGROUND } from './palette';
+import { buildProjectsIsland } from './projects-island';
+import { buildSkillsIsland } from './skills-island';
 import { createStarfield } from './starfield';
-import { buildCityFace } from './faces/city-face';
-import { buildEmptyFace } from './faces/empty-face';
-import { buildForestFace } from './faces/forest-face';
-import { buildIceFace } from './faces/ice-face';
-import { buildPyramidsFace } from './faces/pyramids-face';
-import { buildSuburbFace } from './faces/suburb-face';
-import { FaceKey, InteractionKind, InteractiveObject, ThemeKey } from './types';
+import { InteractionKind, InteractiveObject } from './types';
 
 export interface CubeSceneData {
   projects: Project[];
-  workExperience: TimelineEntry[];
   skills: Skill[];
-  templates: Record<ModelKey, Group>;
+  kits: Kits;
 }
 
 export interface LabelPoint {
@@ -49,132 +45,214 @@ export interface LabelPoint {
   x: number;
   y: number;
   text: string;
-  opacity: number;
-  kind: InteractionKind;
+  kind: InteractionKind | null;
   payload: unknown;
+}
+
+interface IslandRuntime {
+  definition: IslandDefinition;
+  /** Wrapper carrying the island's world position and its idle bob. */
+  wrapper: Group;
+  detailGroup: Group;
+  interactiveObjects: InteractiveObject[];
+  floatPhase: number;
+  /** True once the camera is close enough to count as "at" this island. Gates both the dense
+   * ground cover and the per-building label chips. */
+  detailVisible: boolean;
+  /**
+   * True on islands whose building carries the island's own name — About's castle and Contact's
+   * cruise ship. Their title is hidden while the building chip is up, so the same word is never
+   * printed twice; from further out the title is all that labels the island, so it stays.
+   */
+  titleDuplicatesBuilding: boolean;
+}
+
+interface CameraFlight {
+  startTime: number;
+  duration: number;
+  startPosition: Vector3;
+  startTarget: Vector3;
+  endPosition: Vector3;
+  endTarget: Vector3;
+}
+
+function easeInOutCubic(t: number): number {
+  return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 }
 
 const worldPositionScratch = new Vector3();
 
 /**
- * Where a face's wrapper content ends up on screen depends on TWO rotations stacked together:
- * the wrapper's own orientation (local Y -> that face's normal) AND the cube's rotation at the
- * moment that face is settled at the front (which brings the normal to point at the camera).
- * `Quaternion.setFromUnitVectors` only controls the first one and leaves the roll around the
- * normal unspecified, so depending on which of the 5 rolls brought a given face to the front,
- * its local X (the axis every face builder lays props out along, expecting a horizontal row)
- * can end up pointing anywhere — world X for one face, world Z or Y for another — producing a
- * diagonal cascade instead of a row for faces where it doesn't happen to line up.
+ * Distance at which an island's dense ground cover is dropped, as a multiple of its framing
+ * radius. Two thresholds give hysteresis, so sitting right on the boundary doesn't flicker it
+ * every frame.
  *
- * The fix: solve for the wrapper orientation that makes the COMBINED rotation (keyframe * wrapper)
- * land on one fixed, consistent target basis for every face — local X -> world X (screen
- * horizontal), local Y -> world Z (toward the camera), local Z -> world -Y — by inverting the
- * known keyframe rotation: wrapper = keyframe^-1 * target.
+ * Measured against the framing radius, not the footprint, so that flying to an island always lands
+ * inside the "show" threshold — against the footprint alone, a tall island's fly-to distance sits
+ * beyond it and the camera arrives at a bare plaza.
  */
-const TARGET_SETTLED_BASIS = new Quaternion().setFromRotationMatrix(
-  new Matrix4().makeBasis(new Vector3(1, 0, 0), new Vector3(0, 0, 1), new Vector3(0, -1, 0)),
-);
+const DETAIL_SHOW_FACTOR = 2.9;
+const DETAIL_HIDE_FACTOR = 3.5;
 
-const KEYFRAME_QUATERNION_BY_FACE: Record<FaceKey, Quaternion> = CUBE_KEYFRAMES.reduce(
-  (map, keyframe) => {
-    map[keyframe.frontFace] = keyframe.quaternion;
-    return map;
-  },
-  {} as Record<FaceKey, Quaternion>,
-);
+/** Distance an island is framed from, as a multiple of its radius. Fits it into the vertical
+ * field of view with a little margin. */
+const FRAMING_FACTOR = 2.5;
 
-function faceWrapperOrientation(faceKey: FaceKey): Quaternion {
-  const keyframeQuaternion = KEYFRAME_QUATERNION_BY_FACE[faceKey];
-  return keyframeQuaternion.clone().invert().multiply(TARGET_SETTLED_BASIS);
+/** Same, for the opening view that has to hold every island at once. */
+const WORLD_FRAMING_FACTOR = 2.0;
+
+/** Camera height as a fraction of its distance, i.e. tan of the starting elevation angle. */
+const ELEVATION_FACTOR = 0.62;
+
+/** An island's title chip clears its tallest building by this fraction of the island radius, and
+ * is dropped once the camera is closer than this multiple of its framing radius. */
+const TITLE_CLEARANCE_FACTOR = 0.55;
+const TITLE_VISIBLE_FACTOR = 1.5;
+
+/**
+ * The opening viewpoint: an oblique view framing every island at once, high enough (~32° above the
+ * horizon) to look over each island's rim planting onto the buildings rather than through it. The
+ * islands sit in a loose quad rather than a row, so the view has to pull back far enough to clear
+ * their spread in depth as well as across.
+ *
+ * Shared by the initial camera placement and the "back to the start" button, so the two can never
+ * drift apart.
+ */
+function openingView(): { position: Vector3; target: Vector3 } {
+  const world = worldBounds();
+  const distance = world.radius * WORLD_FRAMING_FACTOR;
+  return {
+    position: new Vector3(
+      world.center.x,
+      world.center.y + distance * ELEVATION_FACTOR,
+      world.center.z + distance,
+    ),
+    target: world.center.clone(),
+  };
 }
 
 export class CubeScene {
   readonly scene = new Scene();
-  readonly camera = new PerspectiveCamera(26, 1, 0.1, 200);
+  readonly camera = new PerspectiveCamera(45, 1, 0.1, 600);
+  readonly controls: OrbitControls;
 
   private readonly renderer: WebGLRenderer;
-  private readonly floatGroup = new Group();
-  private readonly cubeGroup = new Group();
   private readonly interaction: CubeInteraction;
-  private readonly interactiveByTheme = new Map<ThemeKey, InteractiveObject[]>();
-  private readonly contentByTheme = new Map<ThemeKey, Group>();
+  private readonly islands: IslandRuntime[] = [];
+  private flight: CameraFlight | null = null;
+  private panelOpen = false;
 
-  constructor(canvas: HTMLCanvasElement, data: CubeSceneData) {
-    // Steep, high-angle isometric viewpoint (~45° elevation) — the classic "looking down at a
-    // die" look, matching the reference. A narrow FOV + long distance (telephoto-like) keeps
-    // perspective distortion low across the whole face even from this much steeper angle.
-    this.camera.position.set(3.25, 20.7, 22.6);
-    this.camera.lookAt(0, -0.3, 2);
+  constructor(canvas: HTMLCanvasElement, interactionRoot: HTMLElement, data: CubeSceneData) {
+    const world = worldBounds();
+    const opening = openingView();
+
+    this.camera.position.copy(opening.position);
+    this.camera.lookAt(opening.target);
     this.interaction = new CubeInteraction(this.camera);
 
     this.renderer = new WebGLRenderer({ canvas, antialias: true });
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     this.renderer.setClearColor(SPACE_BACKGROUND, 1);
 
-    this.scene.add(createStarfield());
-    this.scene.add(new AmbientLight(0xffffff, 0.7));
+    // Google-Earth-style free camera: left-drag orbits, right-drag/two-finger pans, wheel/pinch
+    // zooms. Clamped so the camera can never dip below the world or flip fully overhead.
+    //
+    // Bound to `interactionRoot` (the shared parent of the canvas AND the floating HTML label
+    // layer) rather than the bare canvas: a drag/wheel that starts or lands on a label chip would
+    // otherwise never reach the canvas's own listeners and fall through to native page scroll
+    // instead of moving the camera.
+    this.controls = new OrbitControls(this.camera, interactionRoot);
+    this.controls.target.copy(world.center);
+    this.controls.enableDamping = true;
+    this.controls.dampingFactor = 0.08;
+    // With more than one island, dollying toward a fixed world centre would zoom into the empty
+    // space between them. Zooming toward the cursor instead means pointing at an island and
+    // scrolling both approaches it and drags the orbit target along — so once you have zoomed in
+    // on an island, orbiting turns that island on its own axis.
+    this.controls.zoomToCursor = true;
+    const smallestRadius = Math.min(...ISLANDS.map((island) => island.radius));
+    this.controls.minDistance = smallestRadius * 0.35;
+    this.controls.maxDistance = world.radius * 3.2;
+    this.controls.minPolarAngle = MathUtils.degToRad(25);
+    this.controls.maxPolarAngle = MathUtils.degToRad(85);
+    this.controls.update();
 
-    const keyLight = new DirectionalLight(0xffffff, 0.95);
-    keyLight.position.set(4, 6, 5);
+    this.scene.add(createStarfield(1800, world.radius * 3));
+
+    // The kit models are textured PBR surfaces rather than flat-shaded blocks, so they need
+    // considerably more light to read against the near-black sky.
+    this.scene.add(new AmbientLight(0xffffff, 1.5));
+
+    const keyLight = new DirectionalLight(0xfff4e0, 2.2);
+    keyLight.position.set(12, 18, 10);
     this.scene.add(keyLight);
 
-    const fillLight = new DirectionalLight(0x9fc7ff, 0.35);
-    fillLight.position.set(-5, -2, -4);
+    const fillLight = new DirectionalLight(0xbcd8ff, 0.8);
+    fillLight.position.set(-14, 2, -10);
     this.scene.add(fillLight);
 
-    this.floatGroup.add(this.cubeGroup);
-    this.scene.add(this.floatGroup);
-
-    this.buildFaces(data);
+    this.buildIslands(data);
   }
 
-  private buildFaces(data: CubeSceneData): void {
-    const { templates } = data;
-    const builders: Record<ThemeKey, () => { group: Group; interactiveObjects: InteractiveObject[] }> = {
-      suburb: () => buildSuburbFace(data.projects, templates),
-      city: () => buildCityFace(data.workExperience, templates),
-      ice: () => buildIceFace(templates),
-      pyramids: () => buildPyramidsFace(data.skills, templates),
-      forest: () => buildForestFace(templates),
-      empty: () => buildEmptyFace(),
+  private buildIslands(data: CubeSceneData): void {
+    const builders: Record<IslandId, () => IslandBuildResult> = {
+      projects: () => buildProjectsIsland(data.projects, data.kits),
+      skills: () => buildSkillsIsland(data.skills, data.kits),
+      about: () => buildAboutIsland(data.kits),
+      contact: () => buildContactIsland(data.kits),
     };
 
-    (Object.keys(FACE_NORMAL_LOOKUP) as FaceKey[]).forEach((faceKey) => {
-      const theme = FACE_THEME[faceKey];
-      const normal = FACE_NORMAL_LOOKUP[faceKey];
-
+    ISLANDS.forEach((definition, index) => {
       const wrapper = new Group();
-      wrapper.position.copy(normal).multiplyScalar(SLAB_SIZE / 2);
-      wrapper.quaternion.copy(faceWrapperOrientation(faceKey));
+      wrapper.position.copy(definition.position);
 
-      const slab = createSlab(PALETTE[theme].slab);
-      wrapper.add(slab);
+      wrapper.add(
+        createIslandBase({
+          topRadius: definition.radius,
+          radialSegments: definition.radialSegments,
+          topColor: definition.colors.grass,
+          rockColor: definition.colors.rock,
+          topRoughness: definition.topRoughness,
+        }),
+      );
 
-      const { group: content, interactiveObjects } = builders[theme]();
-      wrapper.add(content);
+      const { group, detailGroup, interactiveObjects } = builders[definition.id]();
+      wrapper.add(group);
+      this.scene.add(wrapper);
 
-      this.cubeGroup.add(wrapper);
-      this.contentByTheme.set(theme, content);
-      this.interactiveByTheme.set(theme, interactiveObjects);
+      this.islands.push({
+        definition,
+        wrapper,
+        detailGroup,
+        interactiveObjects,
+        // Offset phases so the islands don't bob in lockstep.
+        floatPhase: index * 1.7,
+        detailVisible: true,
+        titleDuplicatesBuilding: interactiveObjects.some(
+          (entry) => entry.label === definition.title,
+        ),
+      });
     });
   }
 
-  /** Advances the cube's rotation/idle motion for the given scroll progress. Props never change
-   * size — only ever exactly one face's props are visible at a time (whichever is currently
-   * closest to front-and-center), so there's no partial-reveal blending between faces either. */
-  update(progress: number, elapsedSeconds: number): void {
-    rotationForProgress(progress, this.cubeGroup.quaternion);
+  /** Idle bob, OrbitControls damping, nav-triggered camera flights, and per-island culling of the
+   * dense ground cover. */
+  update(elapsedSeconds: number): void {
+    this.advanceFlight();
 
-    this.floatGroup.position.y = Math.sin(elapsedSeconds * 0.6) * 0.12;
-    this.floatGroup.rotation.y = Math.sin(elapsedSeconds * 0.3) * 0.015;
+    for (const island of this.islands) {
+      const bob = Math.sin(elapsedSeconds * 0.4 + island.floatPhase) * 0.12;
+      island.wrapper.position.y = island.definition.position.y + bob;
 
-    const activeIndex = activeThemeIndex(progress);
-    THEME_ORDER.forEach((theme, index) => {
-      const content = this.contentByTheme.get(theme);
-      if (content) {
-        content.visible = index === activeIndex;
-      }
-    });
+      const distance = this.camera.position.distanceTo(island.wrapper.position);
+      const framing = framingRadius(island.definition);
+      island.detailVisible = island.detailVisible
+        ? distance < framing * DETAIL_HIDE_FACTOR
+        : distance < framing * DETAIL_SHOW_FACTOR;
+      island.detailGroup.visible = island.detailVisible;
+    }
+
+    this.controls.update();
   }
 
   render(): void {
@@ -187,44 +265,174 @@ export class CubeScene {
     this.renderer.setSize(width, height, false);
   }
 
-  /** Only the currently front-and-settled face is clickable. */
-  pickAtNdc(ndcX: number, ndcY: number, progress: number): InteractiveObject | null {
-    const activeIndex = activeThemeIndex(progress);
-    if (themeRevealWeight(progress, activeIndex) < 0.85) {
-      return null;
-    }
-    const theme = THEME_ORDER[activeIndex];
-    const candidates = this.interactiveByTheme.get(theme) ?? [];
+  /**
+   * Suspends camera control while a modal panel is open.
+   *
+   * The panels render inside the same host element OrbitControls listens on, so while it is live
+   * it swallows their input: `setPointerCapture` on pointerdown retargets the click away from the
+   * modal's close button, and the wheel handler calls preventDefault, stopping the panel from
+   * scrolling. Disabling the controls hands both back to the DOM.
+   */
+  setPanelOpen(open: boolean): void {
+    this.panelOpen = open;
+    this.controls.enabled = !open && !this.flight;
+  }
+
+  pickAtNdc(ndcX: number, ndcY: number): InteractiveObject | null {
+    const candidates = this.islands.flatMap((island) => island.interactiveObjects);
     return this.interaction.pick(ndcX, ndcY, candidates);
   }
 
-  /** Screen-space label chips for the single currently-visible face's props. */
-  getLabels(width: number, height: number, progress: number): LabelPoint[] {
-    const labels: LabelPoint[] = [];
-    const theme = THEME_ORDER[activeThemeIndex(progress)];
-    const objects = this.interactiveByTheme.get(theme) ?? [];
+  /**
+   * Picks an island the camera is too far from to interact with, so a click can fly there instead.
+   *
+   * Only islands showing nothing but their title qualify. Up close, a click has to keep reaching
+   * the building under it — flying to an island you are already standing on would take the
+   * selection away rather than give it.
+   */
+  pickDistantIslandAtNdc(ndcX: number, ndcY: number): IslandId | null {
+    const candidates = this.islands
+      .filter((island) => !island.detailVisible)
+      .map((island) => ({
+        value: island.definition.id,
+        center: island.wrapper.position,
+        radius: framingRadius(island.definition),
+      }));
 
-    objects.forEach((entry, objectIndex) => {
-      entry.labelAnchor.getWorldPosition(worldPositionScratch);
-      const screen = projectToScreen(worldPositionScratch, this.camera, width, height);
-      if (!screen.visible) {
-        return;
+    return this.interaction.pickSphere(ndcX, ndcY, candidates);
+  }
+
+  /**
+   * Screen-space label chips: each island's title plus one per building, so a project or skill can
+   * be opened either by clicking its building or its chip.
+   *
+   * Building chips only appear once the camera is at that island. From the opening view that holds
+   * all four at once, six project chips over a thumbnail-sized island are an unreadable pile.
+   */
+  getLabels(width: number, height: number): LabelPoint[] {
+    const labels: LabelPoint[] = [];
+
+    for (const island of this.islands) {
+      const { radius, contentHeight } = island.definition;
+      const cameraDistance = this.camera.position.distanceTo(island.wrapper.position);
+
+      // The title floats clear of the island's tallest building, and drops away once the camera is
+      // close enough that the building chips carry the labelling.
+      const titleWouldRepeatChip = island.detailVisible && island.titleDuplicatesBuilding;
+      if (
+        !titleWouldRepeatChip &&
+        cameraDistance > framingRadius(island.definition) * TITLE_VISIBLE_FACTOR
+      ) {
+        worldPositionScratch
+          .copy(island.wrapper.position)
+          .setY(island.wrapper.position.y + contentHeight + radius * TITLE_CLEARANCE_FACTOR);
+        const titleScreen = projectToScreen(worldPositionScratch, this.camera, width, height);
+        if (titleScreen.visible) {
+          labels.push({
+            id: `title-${island.definition.id}`,
+            x: titleScreen.x,
+            y: titleScreen.y,
+            text: island.definition.title,
+            kind: null,
+            // Carries the island id so clicking the title flies there, the same as clicking the
+            // island itself — it sits right above it and is the obvious thing to aim at.
+            payload: island.detailVisible ? null : island.definition.id,
+          });
+        }
       }
-      labels.push({
-        id: `${theme}-${objectIndex}`,
-        x: screen.x,
-        y: screen.y,
-        text: entry.label,
-        opacity: 1,
-        kind: entry.kind,
-        payload: entry.payload,
+
+      if (!island.detailVisible) {
+        continue;
+      }
+
+      island.interactiveObjects.forEach((entry, index) => {
+        entry.labelAnchor.getWorldPosition(worldPositionScratch);
+        const screen = projectToScreen(worldPositionScratch, this.camera, width, height);
+        if (!screen.visible) {
+          return;
+        }
+        labels.push({
+          id: `${island.definition.id}-${index}`,
+          x: screen.x,
+          y: screen.y,
+          text: entry.label,
+          kind: entry.kind,
+          payload: entry.payload,
+        });
       });
-    });
+    }
 
     return labels;
   }
 
+  /**
+   * Smoothly flies the camera to frame one island, preserving the current viewing angle (only
+   * distance and target change). Because the orbit target lands on the island, orbiting after the
+   * flight turns that island on its own axis. Free mouse control resumes when the flight ends.
+   */
+  flyToIsland(id: IslandId): void {
+    const definition = findIsland(id);
+    const runtime = this.islands.find((island) => island.definition.id === id);
+    const endTarget = (runtime?.wrapper.position ?? definition.position).clone();
+
+    const desiredDistance = MathUtils.clamp(
+      framingRadius(definition) * FRAMING_FACTOR,
+      this.controls.minDistance,
+      this.controls.maxDistance,
+    );
+    const direction = this.camera.position.clone().sub(this.controls.target).normalize();
+
+    this.flight = {
+      startTime: performance.now(),
+      duration: 900,
+      startPosition: this.camera.position.clone(),
+      startTarget: this.controls.target.clone(),
+      endPosition: endTarget.clone().addScaledVector(direction, desiredDistance),
+      endTarget,
+    };
+    this.controls.enabled = false;
+  }
+
+  /**
+   * Flies back to the opening viewpoint — the same framing the world loads with, so it undoes any
+   * amount of orbiting, panning and zooming in one step.
+   *
+   * Unlike `flyToIsland` this restores the viewing *angle* too, not just the distance and target:
+   * the point is to land exactly where a page reload would.
+   */
+  resetView(): void {
+    const opening = openingView();
+    this.flight = {
+      startTime: performance.now(),
+      duration: 1000,
+      startPosition: this.camera.position.clone(),
+      startTarget: this.controls.target.clone(),
+      endPosition: opening.position,
+      endTarget: opening.target,
+    };
+    this.controls.enabled = false;
+  }
+
+  private advanceFlight(): void {
+    const flight = this.flight;
+    if (!flight) {
+      return;
+    }
+
+    const t = MathUtils.clamp((performance.now() - flight.startTime) / flight.duration, 0, 1);
+    const eased = easeInOutCubic(t);
+    this.camera.position.lerpVectors(flight.startPosition, flight.endPosition, eased);
+    this.controls.target.lerpVectors(flight.startTarget, flight.endTarget, eased);
+
+    if (t >= 1) {
+      this.flight = null;
+      // Not unconditionally true: a panel opened mid-flight must keep the controls suspended.
+      this.controls.enabled = !this.panelOpen;
+    }
+  }
+
   dispose(): void {
+    this.controls.dispose();
     this.scene.traverse((object) => {
       if (object instanceof Mesh) {
         object.geometry.dispose();

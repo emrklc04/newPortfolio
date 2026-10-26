@@ -12,6 +12,8 @@ export interface IslandBuildResult {
    * descendant of `group`, which is what the scene actually adds. */
   detailGroup: Group;
   interactiveObjects: InteractiveObject[];
+  /** Optional per-frame animation for island content. */
+  update?: (elapsedSeconds: number) => void;
 }
 
 /**

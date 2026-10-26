@@ -56,6 +56,8 @@ export class CubeExperience implements OnDestroy {
   protected readonly selectedSkill = signal<Skill | null>(null);
   protected readonly aboutOpen = signal(false);
   protected readonly contactOpen = signal(false);
+  protected readonly helpOpen = signal(false);
+  protected readonly explorationHintVisible = signal(true);
   // Werdegang has no island of its own, so the header nav opens it as an overview panel.
   protected readonly journeyOpen = signal(false);
 
@@ -101,7 +103,8 @@ export class CubeExperience implements OnDestroy {
         !!this.selectedSkill() ||
         this.aboutOpen() ||
         this.contactOpen() ||
-        this.journeyOpen();
+        this.journeyOpen() ||
+        this.helpOpen();
 
       this.panelOpen.set(open);
       document.body.style.overflow = open ? 'hidden' : '';
@@ -179,6 +182,13 @@ export class CubeExperience implements OnDestroy {
       el.textContent = point.text;
       el.style.transform = `translate(${point.x}px, ${point.y}px)`;
       el.classList.toggle('label-chip--title', point.kind === null);
+      el.classList.toggle(
+        'label-chip--spring-cue',
+        this.explorationHintVisible() &&
+          point.id === 'title-about' &&
+          point.kind === null &&
+          typeof point.payload === 'string',
+      );
       if (point.kind) {
         el.dataset['kind'] = point.kind;
       } else {
@@ -227,7 +237,13 @@ export class CubeExperience implements OnDestroy {
   // cursor physically is — a canvas-only listener would never see that retargeted pointerup.
   @HostListener('pointerdown', ['$event'])
   protected onCanvasPointerDown(event: PointerEvent): void {
+    this.dismissExplorationHint();
     this.pointerDownInfo = { x: event.clientX, y: event.clientY, time: performance.now() };
+  }
+
+  @HostListener('wheel')
+  protected onWorldWheel(): void {
+    this.dismissExplorationHint();
   }
 
   @HostListener('pointerup', ['$event'])
@@ -309,6 +325,7 @@ export class CubeExperience implements OnDestroy {
    * open. Only Werdegang and Kontakt, which have no island yet, open straight away.
    */
   private openSection(id: SectionId): void {
+    this.dismissExplorationHint();
     switch (id) {
       case 'projects':
         this.cubeScene?.flyToIsland('projects');
@@ -352,8 +369,22 @@ export class CubeExperience implements OnDestroy {
     this.journeyOpen.set(false);
   }
 
+  protected openHelp(): void {
+    this.dismissExplorationHint();
+    this.helpOpen.set(true);
+  }
+
+  protected closeHelp(): void {
+    this.helpOpen.set(false);
+  }
+
   /** Flies back to the viewpoint the world opens with. */
   protected resetView(): void {
+    this.dismissExplorationHint();
     this.cubeScene?.resetView();
+  }
+
+  private dismissExplorationHint(): void {
+    this.explorationHintVisible.set(false);
   }
 }

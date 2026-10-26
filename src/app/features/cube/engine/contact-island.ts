@@ -1,16 +1,31 @@
 /**
  * Builds the Contact island: an irregular landmass sitting in open water, with a fleet of ships
- * anchored around it.
+ * slowly sailing around it.
  *
  * The island base's top surface is the sea here rather than ground, so the land is a separate
  * extruded mesh raised above it — which is what gives this island a coastline instead of the flat
  * discs the others stand on. Content is built in local Y-up space with the waterline at y = 0.
  */
-import { ExtrudeGeometry, Group, Mesh, MeshStandardMaterial, Object3D, Shape } from 'three';
-import { HouseBlueprint, buildHouse } from './house-builder';
+import {
+  DoubleSide,
+  BoxGeometry,
+  ConeGeometry,
+  CylinderGeometry,
+  ExtrudeGeometry,
+  Group,
+  Mesh,
+  MeshBasicMaterial,
+  MeshStandardMaterial,
+  Object3D,
+  PointLight,
+  Shape,
+  ShapeGeometry,
+  Vector3,
+} from 'three';
 import { flatTopRadius } from './island-base';
 import { IslandBuildResult, place } from './island-decor';
 import { findIsland } from './islands';
+import { addGlow } from './glow';
 import { kitPart } from './kit-loader';
 import { FANTASY, Kit, Kits, SHIPS } from './kits';
 import { cloneModel, normalizeModel, normalizeModelToSize } from './model-utils';
@@ -18,7 +33,6 @@ import { ScatterPoint, scatterPoints } from './scatter';
 import { InteractiveObject } from './types';
 
 const ISLAND = findIsland('contact');
-const ISLAND_RADIUS = ISLAND.radius;
 
 /** Ships must stay inside this or they drift off the water's rounded rim. */
 const FLAT_RADIUS = flatTopRadius(ISLAND.radius, ISLAND.radialSegments);
@@ -32,9 +46,22 @@ const LAND_HEIGHT = 0.42;
 const LAND_DEPTH = 1.2;
 
 const LAND_COLOR = 0x5f9247;
+const SHIP_ORBIT_SPEED = 0.030;
 
-/** Kept clear around the two houses so trees don't grow through them. */
-const BUILDING_CLEARANCE = 1.1;
+interface ShipMotion {
+  rig: Group;
+  radius: number;
+  startAngle: number;
+  phase: number;
+}
+
+interface WakeMotion {
+  mesh: Mesh;
+  material: MeshBasicMaterial;
+  phase: number;
+}
+
+const LIGHTHOUSE_HEIGHT = 4.8;
 
 /**
  * Coastline radius at a given angle.
@@ -82,13 +109,75 @@ export function buildContactIsland(kits: Kits): IslandBuildResult {
 
   group.add(createLandmass());
 
-  const { interactiveObjects, clearances } = addFleet(group, kits.ships);
-  addSettlement(group, kits.medieval, clearances);
+  const { clearances, update } = addFleet(group, kits.ships);
+  const lighthouse = addLighthouse(group);
+  clearances.push({ x: 0, z: 0, radius: 2.4 });
   addWoodland(group, kits.fantasy, clearances);
   addShoreDetail(detailGroup, kits.fantasy, clearances);
 
   group.add(detailGroup);
-  return { group, detailGroup, interactiveObjects };
+  return { group, detailGroup, interactiveObjects: [lighthouse], update };
+}
+
+/** A compact, faceted lighthouse at the island's centre, and its sole contact link. */
+function addLighthouse(group: Group): InteractiveObject {
+  const towerMaterial = new MeshStandardMaterial({ color: 0xe8dfc5, roughness: 0.92, flatShading: true });
+  const roofMaterial = new MeshStandardMaterial({ color: 0x455b62, roughness: 0.9, flatShading: true });
+  const stoneMaterial = new MeshStandardMaterial({ color: 0x817b70, roughness: 1, flatShading: true });
+  const windowMaterial = new MeshStandardMaterial({
+    color: 0xffd47a, emissive: 0xffa52f, emissiveIntensity: 1.4, roughness: 0.5,
+  });
+  const lighthouse = new Group();
+  lighthouse.position.y = LAND_HEIGHT;
+  lighthouse.userData['interactive'] = true;
+
+  const foundation = new Mesh(new CylinderGeometry(0.9, 1.05, 0.32, 8), stoneMaterial);
+  foundation.position.y = 0.16;
+  lighthouse.add(foundation);
+
+  const tower = new Mesh(new CylinderGeometry(0.52, 0.78, 3.15, 8), towerMaterial);
+  tower.position.y = 1.88;
+  lighthouse.add(tower);
+
+  const door = new Mesh(new BoxGeometry(0.34, 0.72, 0.08), roofMaterial);
+  door.position.set(0, 0.52, 0.69);
+  lighthouse.add(door);
+
+  for (const y of [1.25, 2.25, 3.05]) {
+    const slit = new Mesh(new BoxGeometry(0.13, 0.28, 0.04), windowMaterial);
+    slit.position.set(0, y, 0.53 - (y - 1.25) * 0.065);
+    lighthouse.add(slit);
+  }
+
+  const balcony = new Mesh(new CylinderGeometry(0.8, 0.8, 0.16, 8), roofMaterial);
+  balcony.position.y = 3.58;
+  lighthouse.add(balcony);
+
+  const lanternRoom = new Mesh(new CylinderGeometry(0.48, 0.54, 0.68, 8), windowMaterial);
+  lanternRoom.position.y = 4.0;
+  lighthouse.add(lanternRoom);
+
+  const roof = new Mesh(new ConeGeometry(0.72, 0.58, 8), roofMaterial);
+  roof.position.y = 4.63;
+  lighthouse.add(roof);
+
+  const beacon = new PointLight(0xffd27d, 1.4, 8, 2);
+  beacon.position.set(0, 4.02, 0);
+  lighthouse.add(beacon);
+  addGlow(lighthouse, new Vector3(0, 4.02, 0), 0xffbd58, 2.8, 0.95);
+  addGlow(lighthouse, new Vector3(0, 2.25, 0.56), 0xffc96f, 0.8, 0.72);
+  group.add(lighthouse);
+
+  const labelAnchor = new Object3D();
+  labelAnchor.position.y = LAND_HEIGHT + LIGHTHOUSE_HEIGHT + 0.35;
+  group.add(labelAnchor);
+  return {
+    object: lighthouse,
+    kind: 'contact',
+    payload: null,
+    label: 'Kontakt',
+    labelAnchor,
+  };
 }
 
 /**
@@ -131,16 +220,13 @@ function createLandmass(): Mesh {
   return land;
 }
 
-/**
- * The anchored fleet. The cruise ship is the island's one interactive object — it is the largest
- * thing here and unmistakably the subject, so it carries the Contact panel.
- */
+/** The fleet sails around the shore as scenery; the lighthouse is the island's contact target. */
 function addFleet(
   group: Group,
   kit: Kit,
 ): {
-  interactiveObjects: InteractiveObject[];
   clearances: { x: number; z: number; radius: number }[];
+  update: (elapsedSeconds: number) => void;
 } {
   /**
    * Hulls are modelled sitting on y = 0, so each is sunk to put a waterline on it. `draft` is an
@@ -164,95 +250,118 @@ function addFleet(
     { part: SHIPS.rowboat, length: 0.9, draft: 0.03, angle: 0.95, offshore: 0.75 },
   ];
 
-  const interactiveObjects: InteractiveObject[] = [];
   const clearances: { x: number; z: number; radius: number }[] = [];
+  const movingShips: ShipMotion[] = [];
+  const movingWakes: WakeMotion[] = [];
 
-  for (const { part, length, draft, angle, offshore } of fleet) {
+  for (const [index, { part, length, draft, angle, offshore }] of fleet.entries()) {
     const ship = cloneModel(kitPart(kit, part));
     normalizeModelToSize(ship, length);
 
-    // Far enough out that the hull clears the shore, and never past the water's flat edge.
-    const radius = Math.min(
-      coastRadius(angle) + offshore + length * 0.3,
-      FLAT_RADIUS - length * 0.6,
+    // The ship keeps moving around the coast, so use the coastline's maximum radius rather than
+    // the radius at its starting angle. Its long axis follows the orbit, so only a small fraction
+    // of its length contributes to its radial footprint. This keeps the hull and wake offshore
+    // even where the coastline bulges out.
+    const footprintRadius = length * 0.6;
+    const maxCenterRadius = Math.sqrt(
+      Math.max(0, FLAT_RADIUS * FLAT_RADIUS - footprintRadius * footprintRadius),
     );
+    const radius = Math.min(MAX_COAST_RADIUS + offshore + length * 0.08, maxCenterRadius);
     const x = Math.cos(angle) * radius;
     const z = Math.sin(angle) * radius;
 
-    ship.position.x += x;
-    ship.position.z += z;
+    const shipRig = new Group();
+    shipRig.position.set(x, 0, z);
+    shipRig.rotation.y = -angle;
     ship.position.y -= draft;
-    // Hulls run along their local z, so negating the angle turns each one broadside to the shore.
-    ship.rotation.y = -angle;
-    group.add(ship);
+    shipRig.add(ship);
+    if (part === SHIPS.cruise) addShipWindowGlows(shipRig);
+
+    const wake = new Group();
+    wake.position.set(0, 0.025, -length * 0.48);
+    for (const [side, phase] of [
+      [-1, index * 0.9],
+      [1, index * 0.9 + 1.4],
+    ] as const) {
+      const wakeMotion = createWakeRibbon(side);
+      wakeMotion.phase = phase;
+      wake.add(wakeMotion.mesh);
+      movingWakes.push(wakeMotion);
+    }
+    shipRig.add(wake);
+
+    movingShips.push({ rig: shipRig, radius, startAngle: angle, phase: index });
 
     clearances.push({ x, z, radius: length * 0.6 });
 
-    if (part === SHIPS.cruise) {
-      ship.userData['interactive'] = true;
-      const labelAnchor = new Object3D();
-      labelAnchor.position.set(x, length * 0.55, z);
-      group.add(labelAnchor);
-
-      interactiveObjects.push({
-        object: ship,
-        kind: 'contact',
-        // The Contact panel is static content, so there is nothing to carry through.
-        payload: null,
-        label: 'Kontakt',
-        labelAnchor,
-      });
-    }
+    group.add(shipRig);
   }
 
-  return { interactiveObjects, clearances };
+  return {
+    clearances,
+    update: (elapsedSeconds) => {
+      movingShips.forEach(({ rig, radius, startAngle, phase }) => {
+        const currentAngle = startAngle + elapsedSeconds * SHIP_ORBIT_SPEED;
+        rig.position.set(
+          Math.cos(currentAngle) * radius,
+          Math.sin(elapsedSeconds * 0.8 + phase) * 0.025,
+          Math.sin(currentAngle) * radius,
+        );
+        // The hull's local +Z points along its course, keeping the wake trailing astern.
+        rig.rotation.y = -currentAngle;
+      });
+
+      movingWakes.forEach(({ mesh, material, phase }) => {
+        const pulse = (Math.sin(elapsedSeconds * 1.2 + phase) + 1) / 2;
+        material.opacity = 0.07 + pulse * 0.1;
+        mesh.scale.z = 0.9 + pulse * 0.16;
+      });
+    },
+  };
 }
 
-/** A couple of houses inland, so the island reads as inhabited rather than deserted. */
-function addSettlement(
-  group: Group,
-  kit: Kit,
-  clearances: { x: number; z: number; radius: number }[],
-): void {
-  const blueprints: ReadonlyArray<{ blueprint: HouseBlueprint; x: number; z: number }> = [
-    {
-      blueprint: {
-        widthModules: 2,
-        depthModules: 2,
-        storeys: 1,
-        style: 'plaster',
-        entranceSide: 0,
-        seed: 41,
-      },
-      x: -1.1,
-      z: -1.4,
-    },
-    {
-      blueprint: {
-        widthModules: 2,
-        depthModules: 2,
-        storeys: 2,
-        style: 'brick',
-        entranceSide: 0,
-        seed: 77,
-      },
-      x: 1.5,
-      z: 0.9,
-    },
-  ];
-
-  blueprints.forEach(({ blueprint, x, z }, index) => {
-    const house = buildHouse(kit, blueprint);
-    normalizeModel(house, 1.5 + index * 0.45);
-    house.position.x += x;
-    house.position.z += z;
-    house.position.y += LAND_HEIGHT;
-    // Facing out to sea, away from the island's middle.
-    house.rotation.y = Math.atan2(x, z);
-    group.add(house);
-
-    clearances.push({ x, z, radius: BUILDING_CLEARANCE });
+/** A few warm cabin windows sit along both sides of the cruise ship and follow its motion. */
+function addShipWindowGlows(shipRig: Group): void {
+  const windowMaterial = new MeshStandardMaterial({
+    color: 0xffd58a,
+    emissive: 0xffa83b,
+    emissiveIntensity: 2.6,
+    roughness: 0.75,
   });
+  const windowGeometry = new BoxGeometry(0.035, 0.075, 0.105);
+  const positions = [-1.35, -0.45, 0.45, 1.35];
+
+  for (const side of [-1, 1]) {
+    for (const [index, z] of positions.entries()) {
+      const y = index % 2 === 0 ? 0.92 : 1.2;
+      const window = new Mesh(windowGeometry, windowMaterial);
+      window.position.set(side * 0.565, y, z);
+      shipRig.add(window);
+      addGlow(shipRig, new Vector3(side * 0.59, y, z), 0xffc36b, 0.34, 0.72);
+    }
+  }
+}
+
+/** A faint, widening water streak that follows the ship and softly pulses as it moves. */
+function createWakeRibbon(side: -1 | 1): WakeMotion {
+  const shape = new Shape();
+  shape.moveTo(side * 0.2, 0);
+  shape.bezierCurveTo(side * 0.25, 0.3, side * 0.48, 0.95, side * 0.7, 1.55);
+  shape.lineTo(side * 0.54, 1.55);
+  shape.bezierCurveTo(side * 0.38, 0.9, side * 0.18, 0.3, side * 0.12, 0.04);
+  shape.closePath();
+
+  const geometry = new ShapeGeometry(shape, 8);
+  geometry.rotateX(-Math.PI / 2);
+  const material = new MeshBasicMaterial({
+    color: 0xd8f2f5,
+    transparent: true,
+    opacity: 0.14,
+    depthWrite: false,
+    side: DoubleSide,
+  });
+  const ribbon = new Mesh(geometry, material);
+  return { mesh: ribbon, material, phase: 0 };
 }
 
 /** Trees and boulders covering the land. */

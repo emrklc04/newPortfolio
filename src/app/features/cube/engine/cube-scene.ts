@@ -7,6 +7,7 @@ import {
   Mesh,
   PerspectiveCamera,
   Scene,
+  PCFSoftShadowMap,
   Vector3,
   WebGLRenderer,
 } from 'three';
@@ -15,6 +16,8 @@ import { Project } from '../../../core/models/project.model';
 import { Skill } from '../../../core/models/skill.model';
 import { buildAboutIsland } from './about-island';
 import { buildContactIsland } from './contact-island';
+import { createIslandBridges } from './island-bridges';
+import { SpaceBackground, createSpaceBackground } from './space-background';
 import { CubeInteraction } from './interaction';
 import { IslandBuildResult } from './island-decor';
 import { createIslandBase } from './island-base';
@@ -55,13 +58,14 @@ interface IslandRuntime {
   wrapper: Group;
   detailGroup: Group;
   interactiveObjects: InteractiveObject[];
+  update?: IslandBuildResult['update'];
   floatPhase: number;
   /** True once the camera is close enough to count as "at" this island. Gates both the dense
    * ground cover and the per-building label chips. */
   detailVisible: boolean;
   /**
    * True on islands whose building carries the island's own name — About's castle and Contact's
-   * cruise ship. Their title is hidden while the building chip is up, so the same word is never
+   * lighthouse. Their title is hidden while the building chip is up, so the same word is never
    * printed twice; from further out the title is all that labels the island, so it stays.
    */
   titleDuplicatesBuilding: boolean;
@@ -99,7 +103,7 @@ const DETAIL_HIDE_FACTOR = 3.5;
 const FRAMING_FACTOR = 2.5;
 
 /** Same, for the opening view that has to hold every island at once. */
-const WORLD_FRAMING_FACTOR = 2.0;
+const WORLD_FRAMING_FACTOR = 1.9;
 
 /** Camera height as a fraction of its distance, i.e. tan of the starting elevation angle. */
 const ELEVATION_FACTOR = 0.62;
@@ -138,6 +142,8 @@ export class CubeScene {
 
   private readonly renderer: WebGLRenderer;
   private readonly interaction: CubeInteraction;
+  private readonly bridges: ReturnType<typeof createIslandBridges>;
+  private readonly spaceBackground: SpaceBackground;
   private readonly islands: IslandRuntime[] = [];
   private flight: CameraFlight | null = null;
   private panelOpen = false;
@@ -153,6 +159,8 @@ export class CubeScene {
     this.renderer = new WebGLRenderer({ canvas, antialias: true });
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     this.renderer.setClearColor(SPACE_BACKGROUND, 1);
+    this.renderer.shadowMap.enabled = true;
+    this.renderer.shadowMap.type = PCFSoftShadowMap;
 
     // Google-Earth-style free camera: left-drag orbits, right-drag/two-finger pans, wheel/pinch
     // zooms. Clamped so the camera can never dip below the world or flip fully overhead.
@@ -178,6 +186,8 @@ export class CubeScene {
     this.controls.update();
 
     this.scene.add(createStarfield(1800, world.radius * 3));
+    this.spaceBackground = createSpaceBackground(world.center, world.radius, this.camera.position);
+    this.scene.add(this.spaceBackground.group);
 
     // The kit models are textured PBR surfaces rather than flat-shaded blocks, so they need
     // considerably more light to read against the near-black sky.
@@ -185,6 +195,14 @@ export class CubeScene {
 
     const keyLight = new DirectionalLight(0xfff4e0, 2.2);
     keyLight.position.set(12, 18, 10);
+    keyLight.castShadow = true;
+    keyLight.shadow.mapSize.set(2048, 2048);
+    keyLight.shadow.camera.left = -48;
+    keyLight.shadow.camera.right = 48;
+    keyLight.shadow.camera.top = 48;
+    keyLight.shadow.camera.bottom = -48;
+    keyLight.shadow.camera.far = 160;
+    keyLight.shadow.bias = -0.0002;
     this.scene.add(keyLight);
 
     const fillLight = new DirectionalLight(0xbcd8ff, 0.8);
@@ -192,6 +210,8 @@ export class CubeScene {
     this.scene.add(fillLight);
 
     this.buildIslands(data);
+    this.bridges = createIslandBridges();
+    this.scene.add(this.bridges.group);
   }
 
   private buildIslands(data: CubeSceneData): void {
@@ -206,18 +226,27 @@ export class CubeScene {
       const wrapper = new Group();
       wrapper.position.copy(definition.position);
 
-      wrapper.add(
-        createIslandBase({
-          topRadius: definition.radius,
-          radialSegments: definition.radialSegments,
-          topColor: definition.colors.grass,
-          rockColor: definition.colors.rock,
-          topRoughness: definition.topRoughness,
-        }),
-      );
+      const base = createIslandBase({
+        topRadius: definition.radius,
+        radialSegments: definition.radialSegments,
+        topColor: definition.colors.grass,
+        rockColor: definition.colors.rock,
+        topRoughness: definition.topRoughness,
+      });
+      base.traverse((object) => {
+        if (object instanceof Mesh) object.receiveShadow = true;
+      });
+      wrapper.add(base);
 
-      const { group, detailGroup, interactiveObjects } = builders[definition.id]();
+      const result = builders[definition.id]();
+      const { group, detailGroup, interactiveObjects } = result;
       wrapper.add(group);
+      group.traverse((object) => {
+        if (object instanceof Mesh) {
+          object.castShadow = true;
+          object.receiveShadow = true;
+        }
+      });
       this.scene.add(wrapper);
 
       this.islands.push({
@@ -225,6 +254,7 @@ export class CubeScene {
         wrapper,
         detailGroup,
         interactiveObjects,
+        update: result.update,
         // Offset phases so the islands don't bob in lockstep.
         floatPhase: index * 1.7,
         detailVisible: true,
@@ -239,8 +269,8 @@ export class CubeScene {
    * dense ground cover. */
   update(elapsedSeconds: number): void {
     this.advanceFlight();
-
     for (const island of this.islands) {
+      island.update?.(elapsedSeconds);
       const bob = Math.sin(elapsedSeconds * 0.4 + island.floatPhase) * 0.12;
       island.wrapper.position.y = island.definition.position.y + bob;
 
@@ -252,7 +282,9 @@ export class CubeScene {
       island.detailGroup.visible = island.detailVisible;
     }
 
+    this.bridges.update(elapsedSeconds);
     this.controls.update();
+    this.spaceBackground.update(this.camera.position);
   }
 
   render(): void {

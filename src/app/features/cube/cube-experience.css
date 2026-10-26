@@ -35,14 +35,19 @@
   overflow: hidden;
 }
 
-/* Returns the camera to the opening viewpoint. Bottom-right, clear of the header nav and of the
-   floating label chips, which cluster around the islands in the middle of the view. */
-.reset-view {
+/* Keep the camera controls together in the bottom-right corner. */
+.view-controls {
   position: absolute;
   right: var(--space-6);
   bottom: var(--space-6);
   z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
 
+.reset-view,
+.help-button {
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
@@ -72,23 +77,75 @@
   flex-shrink: 0;
 }
 
-.reset-view:hover {
+.help-button > span:first-child {
+  display: inline-grid;
+  width: 17px;
+  height: 17px;
+  place-items: center;
+  border: 1.5px solid currentColor;
+  border-radius: 50%;
+  font-size: 0.75rem;
+  line-height: 1;
+}
+
+.reset-view:hover,
+.help-button:hover {
   transform: translateY(-1px);
   box-shadow:
     var(--shadow-lg),
     inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
-.reset-view:active {
+.reset-view:active,
+.help-button:active {
   transform: translateY(0);
 }
 
+.exploration-hint {
+  position: absolute;
+  top: calc(var(--header-height) + var(--space-4));
+  left: 50%;
+  z-index: 2;
+  max-width: calc(100% - var(--space-8));
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-align: center;
+  transform: translateX(-50%);
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.8);
+  pointer-events: none;
+  opacity: 1;
+  transition:
+    opacity 650ms ease,
+    transform 650ms ease;
+}
+
+.exploration-hint--hidden {
+  opacity: 0;
+  transform: translate(-50%, -6px);
+}
+
+.controls-help-list {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+  padding-left: var(--space-6);
+  color: var(--color-text-secondary);
+}
+
+.controls-help-list strong {
+  color: var(--color-text-primary);
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .reset-view {
+  .reset-view,
+  .help-button {
     transition: none;
   }
 
-  .reset-view:hover {
+  .reset-view:hover,
+  .help-button:hover {
     transform: none;
   }
 }
@@ -96,12 +153,27 @@
 /* On narrow screens the label reads as clutter next to the islands; the icon carries it, with the
    accessible name still on the button. */
 @media (max-width: 540px) {
-  .reset-view span {
+  .reset-view span,
+  .help-button span:last-child {
     display: none;
   }
 
-  .reset-view {
+  .reset-view,
+  .help-button {
     padding: var(--space-3);
+  }
+
+  .exploration-hint {
+    top: calc(var(--header-height) + var(--space-2));
+    width: max-content;
+    max-width: calc(100% - var(--space-6));
+    font-size: 0.75rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .exploration-hint {
+    transition: none;
   }
 }
 

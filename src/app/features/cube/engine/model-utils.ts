@@ -31,6 +31,23 @@ export function tintModel(object: Object3D, color: ColorRepresentation): void {
   });
 }
 
+/** Sets one named kit material to a shared palette color on a cloned model. */
+export function tintModelMaterial(
+  object: Object3D,
+  materialName: string,
+  color: ColorRepresentation,
+): void {
+  object.traverse((child) => {
+    if (!(child instanceof Mesh)) return;
+    const materials = Array.isArray(child.material) ? child.material : [child.material];
+    for (const material of materials) {
+      if (material.name === materialName && 'color' in material) {
+        (material as Material & { color: { set(value: ColorRepresentation): void } }).color.set(color);
+      }
+    }
+  });
+}
+
 /**
  * Kenney kits don't share one consistent unit scale or pivot across packs. Rather than guess,
  * this measures the model's actual bounding box and scales/repositions it so it's exactly

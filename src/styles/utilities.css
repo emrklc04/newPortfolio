@@ -141,6 +141,37 @@
   box-shadow: var(--shadow-md);
 }
 
+/* A small spring on the About title is the only opening cue; the glass chip itself stays quiet. */
+.label-chip--spring-cue {
+  animation: about-label-spring 2.8s ease-out infinite;
+}
+
+@keyframes about-label-spring {
+  0%,
+  72%,
+  100% {
+    translate: -50% -100%;
+  }
+  78% {
+    translate: -50% calc(-100% - 5px);
+  }
+  84% {
+    translate: -50% calc(-100% - 1px);
+  }
+  90% {
+    translate: -50% calc(-100% - 3px);
+  }
+  95% {
+    translate: -50% -100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .label-chip--spring-cue {
+    animation: none;
+  }
+}
+
 /* Island titles (readable from far away, per the world-overview zoom level) — bigger and bolder
    than the building chips. */
 .label-chip--title {

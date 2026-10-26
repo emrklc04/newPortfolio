@@ -150,7 +150,7 @@ export const FANTASY = {
 } as const;
 
 /**
- * Ships, anchored around the Contact island.
+ * Ships, sailing around the Contact island.
  *
  * Built from the pack's OBJ files (it ships no glTF). Two source filenames contain a space, which
  * the build replaces with an underscore because three.js sanitizes node names that way on load.

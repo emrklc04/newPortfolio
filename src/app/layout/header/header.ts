@@ -7,7 +7,6 @@ import { MobileNav, NavLink } from './mobile-nav/mobile-nav';
 const NAV_LINKS: NavLink[] = [
   { id: 'projects', label: 'Projekte' },
   { id: 'about', label: 'Über mich' },
-  { id: 'journey', label: 'Werdegang' },
   { id: 'skills', label: 'Skills' },
   { id: 'contact', label: 'Kontakt' },
 ];

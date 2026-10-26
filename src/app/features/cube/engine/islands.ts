@@ -7,7 +7,7 @@ import { Vector3 } from 'three';
  * nav routing. Sections without an island of their own open as panels instead — see
  * cube-experience.ts.
  *
- * The islands are deliberately not connected yet; bridges come later.
+ * Bridges are assembled separately in the scene so they can span between island wrappers.
  */
 export type IslandId = 'projects' | 'skills' | 'about' | 'contact';
 
@@ -62,7 +62,7 @@ export const ISLANDS: readonly IslandDefinition[] = [
     // row, and dropped below them so the castle does not compete with the Skills skyline.
     position: new Vector3(13, -3, 21),
     radius: 8.5,
-    contentHeight: 5.2,
+    contentHeight: 6.5,
     radialSegments: 13,
     // Deeper forest green over darker rock than the village's meadow.
     colors: { grass: 0x4f7a3c, rock: 0x5f5546 },
@@ -71,9 +71,9 @@ export const ISLANDS: readonly IslandDefinition[] = [
     id: 'contact',
     title: 'Kontakt',
     // Opposite the Skills island, completing a loose quad rather than a line.
-    position: new Vector3(-14, 1.5, 15),
+    position: new Vector3(-16, 1.5, 16),
     radius: 9.5,
-    contentHeight: 3.6,
+    contentHeight: 5.2,
     // Smoother than the others: this island's "ground" is open water, which should not read as a
     // chunk of rock.
     radialSegments: 22,

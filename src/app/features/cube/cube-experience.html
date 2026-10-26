@@ -7,6 +7,15 @@
 
 <div #labelLayerRef class="label-layer" aria-hidden="true"></div>
 
+<p
+  class="exploration-hint"
+  [class.exploration-hint--hidden]="!explorationHintVisible()"
+  [attr.aria-hidden]="!explorationHintVisible()"
+>
+  Klicke auf eine Insel oder zoome selbst heran, um sie zu erkunden.
+</p>
+
+<div class="view-controls">
 <!-- `pointerdown` is stopped here so it never reaches OrbitControls, which listens on this
      component's host. It captures the pointer on pointerdown, which would retarget this button's
      click to the host and swallow it — the same way it swallowed the modal close button. -->
@@ -28,6 +37,18 @@
   </svg>
   <span>Gesamtansicht</span>
 </button>
+
+  <button
+    type="button"
+    class="help-button glass-surface tap-target"
+    aria-label="Hilfe zur Steuerung öffnen"
+    (pointerdown)="$event.stopPropagation()"
+    (click)="openHelp()"
+  >
+    <span aria-hidden="true">?</span>
+    <span>Hilfe</span>
+  </button>
+</div>
 
 @if (selectedProject(); as project) {
   <app-project-modal [project]="project" (closeRequested)="closeProject()"></app-project-modal>
@@ -163,6 +184,27 @@
           <a [href]="link.href" target="_blank" rel="noopener noreferrer">{{ link.label }}</a>
         }
       </nav>
+    </div>
+  </app-modal-shell>
+}
+
+@if (helpOpen()) {
+  <app-modal-shell ariaLabel="Steuerung der 3D-Welt" (closeRequested)="closeHelp()">
+    <header class="modal-header">
+      <div>
+        <p class="eyebrow">Orientierung</p>
+        <h2>Erkunde die Inselwelt</h2>
+      </div>
+    </header>
+
+    <div class="modal-section">
+      <ul class="controls-help-list">
+        <li><strong>Insel anklicken:</strong> Die Ansicht fliegt zur ausgewählten Insel.</li>
+        <li><strong>Gebäude anklicken:</strong> Öffnet Projekte, Skills oder weitere Details.</li>
+        <li><strong>Ziehen:</strong> Dreht die Kamera um die Inselwelt.</li>
+        <li><strong>Mausrad oder Pinch:</strong> Zoomt hinein und wieder heraus.</li>
+        <li><strong>Gesamtansicht:</strong> Stellt die Startansicht wieder her.</li>
+      </ul>
     </div>
   </app-modal-shell>
 }

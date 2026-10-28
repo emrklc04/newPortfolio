@@ -390,7 +390,6 @@ function addVillageProps(group: Group, kit: Kit, clearances: readonly ScatterCir
     { part: MEDIEVAL.fence, size: 0.8 },
     { part: MEDIEVAL.crate, size: 0.34 },
     { part: MEDIEVAL.fence, size: 0.8 },
-    { part: MEDIEVAL.stairs, size: 0.7 },
   ];
 
   const points = scatterPoints({

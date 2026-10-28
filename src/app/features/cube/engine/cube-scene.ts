@@ -124,7 +124,7 @@ const TITLE_VISIBLE_FACTOR = 1.5;
  */
 function openingView(): { position: Vector3; target: Vector3 } {
   const world = worldBounds();
-  const distance = world.radius * WORLD_FRAMING_FACTOR;
+  const distance = world.radius * responsiveFramingFactor(WORLD_FRAMING_FACTOR, 0.94);
   return {
     position: new Vector3(
       world.center.x,
@@ -133,6 +133,14 @@ function openingView(): { position: Vector3; target: Vector3 } {
     ),
     target: world.center.clone(),
   };
+}
+
+/** Increase camera distance on narrow screens so a framed sphere also fits horizontally. */
+function responsiveFramingFactor(baseFactor: number, mobileMargin = 1.12): number {
+  const aspect = Math.max(window.innerWidth / Math.max(window.innerHeight, 1), 0.1);
+  const halfHorizontalFov = Math.atan(Math.tan(MathUtils.degToRad(45) / 2) * aspect);
+  const horizontalFit = mobileMargin / Math.sin(halfHorizontalFov);
+  return Math.max(baseFactor, horizontalFit);
 }
 
 export class CubeScene {
@@ -180,7 +188,7 @@ export class CubeScene {
     this.controls.zoomToCursor = true;
     const smallestRadius = Math.min(...ISLANDS.map((island) => island.radius));
     this.controls.minDistance = smallestRadius * 0.35;
-    this.controls.maxDistance = world.radius * 3.2;
+    this.controls.maxDistance = world.radius * 8;
     this.controls.minPolarAngle = MathUtils.degToRad(25);
     this.controls.maxPolarAngle = MathUtils.degToRad(85);
     this.controls.update();
@@ -408,7 +416,7 @@ export class CubeScene {
     const endTarget = (runtime?.wrapper.position ?? definition.position).clone();
 
     const desiredDistance = MathUtils.clamp(
-      framingRadius(definition) * FRAMING_FACTOR,
+      framingRadius(definition) * responsiveFramingFactor(FRAMING_FACTOR),
       this.controls.minDistance,
       this.controls.maxDistance,
     );

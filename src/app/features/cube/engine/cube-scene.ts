@@ -143,6 +143,16 @@ function responsiveFramingFactor(baseFactor: number, mobileMargin = 1.12): numbe
   return Math.max(baseFactor, horizontalFit);
 }
 
+/** On phones, an island needs more camera distance to fit horizontally. Show its sublabels at
+ * that same framing distance so they are already visible when the click-to-island flight ends. */
+function detailShowFactor(): number {
+  return Math.max(DETAIL_SHOW_FACTOR, responsiveFramingFactor(FRAMING_FACTOR) + 0.2);
+}
+
+function detailHideFactor(): number {
+  return Math.max(DETAIL_HIDE_FACTOR, detailShowFactor() + 0.6);
+}
+
 export class CubeScene {
   readonly scene = new Scene();
   readonly camera = new PerspectiveCamera(45, 1, 0.1, 600);
@@ -285,8 +295,8 @@ export class CubeScene {
       const distance = this.camera.position.distanceTo(island.wrapper.position);
       const framing = framingRadius(island.definition);
       island.detailVisible = island.detailVisible
-        ? distance < framing * DETAIL_HIDE_FACTOR
-        : distance < framing * DETAIL_SHOW_FACTOR;
+        ? distance < framing * detailHideFactor()
+        : distance < framing * detailShowFactor();
       island.detailGroup.visible = island.detailVisible;
     }
 
